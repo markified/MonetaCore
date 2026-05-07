@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Registration Pending";
+    string email = ViewData["Email"] as string ?? string.Empty;
+}
+
+<div class="row justify-content-center align-items-center min-vh-75 py-4">
+    <div class="col-xl-5 col-lg-6 col-md-8">
+        <div class="glass-card p-4 p-md-5 text-center">
+            <div class="mb-4">
+                <img src="~/images/monetacore_logo.svg" alt="MonetaCore Logo" class="brand-full-logo" />
+            </div>
+
+            <p class="eyebrow">SIGN UP RECEIVED</p>
+            <h1 class="hero-title mb-3">Your request is pending approval.</h1>
+            <p class="text-muted mb-4">We created your client portal request for <strong>@email</strong>. A MonetaCore administrator needs to approve it before you can sign in.</p>
+
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Back to Home</a>
+                <a asp-action="Login" class="btn btn-primary">Go to Sign In</a>
+            </div>
+        </div>
+    </div>
+</div>

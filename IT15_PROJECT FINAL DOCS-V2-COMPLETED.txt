@@ -1,0 +1,660 @@
+FINAL PROJECT DOCUMENTATION
+	NAME
+	MARK CLARENCE BALMES
+	PROJECT TITLE 
+	MonetaCore: A Web-Based Billing, Invoicing, and Revenue Management System for Service-Based Enterprises
+	SUBJECT:
+CODE:
+TIME:
+	IT15/L Integrative Programming and Technologies
+8491
+7:30pm-9:30pm
+	TOPIC (Type of Business Process)
+	#12 Financial & Billing Management Systems
+	Products/Services
+	Service-based businesses, SMEs, and enterprises requiring centralized billing, invoicing, and revenue tracking operations.
+	Website/Deployed (Link)
+	http://localhost:5000 (Local Development)
+	IIS / Web Host Deployment URL: To be configured on production hosting
+
+	API/ALGO/MODEL: 
+	1. PayMongo API (Payment Gateway)
+	   - Used for processing online card payments and GCash/e-wallet checkout sessions
+	   - Integrated via PayMongoService (Services/PayMongoService.cs)
+	   - Endpoints used: POST /v1/checkout_sessions, POST /v1/payment_intents
+	   - Supports both direct card tokenization flow and hosted checkout redirect flow
+	   - Simulation mode activates automatically when no secret key is configured
+
+	2. RESTful API (Internal — MonetaCore Web API)
+	   - Exposed under /api/ prefix, documented via Swagger/OpenAPI at /api/docs
+	   - Endpoints: POST /api/invoices, PUT /api/invoices/{id}/status, POST /api/payments
+	   - Used for external integrations and programmatic access
+	   - Secured with cookie authentication and policy-based RBAC
+
+	3. Revenue Calculation Algorithm (InvoiceCalculator)
+	   - Custom algorithm in Services/InvoiceCalculator.cs
+	   - Computes invoice Subtotal, TaxAmount (configurable rate), AdjustmentTotal, TotalAmount, BalanceDue
+	   - BalanceDue = TotalAmount - AmountPaid +/- CreditNote/DebitMemo adjustments
+	   - Recalculates automatically on payment or adjustment posting
+
+	4. Profit & Loss Report Generation (ProfitLossPdfDocument)
+	   - Uses QuestPDF library to generate structured PDF financial reports
+	   - Aggregates revenue entries (invoiced amounts) vs. expense entries (adjustments/debit memos)
+	   - Grouped and sorted by period (date range filter)
+
+	Security Features
+	Authentication & Authorization (RBAC), Input Validation & Sanitization, HTTPS/SSL, Logging & Audit Trail, Session Management
+	Target user/s:
+	Billing Staff, Accountants, Finance Managers, System Administrators, Authorized Viewers/Auditors, Clients (External)
+
+
+	Subs System / Management Transaction/Modules
+	
+
+Core Modules
+	Sub System
+	Management Transaction
+	1. Invoice Generation & Tracking
+
+
+	• Invoice Template Manager
+• Client Invoice Portal
+• Recurring Invoice Scheduler
+• Invoice Status Tracker
+	• Create / Edit Invoice
+• Send Invoice to Client
+• Track Invoice Status
+• Void / Cancel Invoice
+• Generate Invoice PDF
+	2. Payment Processing
+	• Payment Gateway Integration
+• Multi-Method Payment Handler
+• Receipt & Confirmation Engine
+	• Record Incoming Payment
+• Process Partial Payment
+• Issue Payment Receipt
+• Reconcile Payment vs Invoice
+• Handle Payment Failure / Retry
+	3. Credit & Debit Management
+	• Credit Note Management System
+• Debit Memo Management System
+• Account Ledger Balancer
+	• Issue Credit Note
+• Issue Debit Memo
+• Adjust Account Balance
+• Post Journal Entry
+• Review Ledger Discrepancy
+	4. Revenue Monitoring
+	• Revenue Analytics Dashboard
+• Financial Report Generator
+• Revenue Trend Engine
+• KPI & Alert Monitor
+	• Generate Revenue Summary
+• View Revenue by Period
+• Export Financial Report
+• Set Revenue Alert Threshold
+• Monitor Billing KPIs
+	5. Account Integration
+	• External Accounting Connector
+• Data Sync Engine
+• API Integration Manager
+	• Sync Billing with Accounting System
+• Import / Export Ledger Data
+• Manage API Keys & Tokens
+• Monitor Sync Logs
+• Resolve Integration Errors
+	
+
+
+
+	LOGO
+	[MonetaCore Logo — Gold "M" emblem on dark obsidian background]
+
+
+	Project Objectives:
+	1. To develop a comprehensive invoice generation and tracking module that automates the creation, issuance, and monitoring of client invoices in real-time.
+2. To implement a secure and efficient payment processing module that supports multiple payment methods, tracks payment statuses, and generates payment confirmations.
+3. To design a credit and debit management module that accurately records financial adjustments, manages credit notes/debit memos, and maintains balanced account ledgers.
+4. To build a revenue monitoring module that provides real-time financial dashboards, KPI alerts, and exportable profit/loss reports for finance managers.
+5. To integrate an account integration module that enables data synchronization with external accounting systems via RESTful APIs, with full outbox event logging.
+
+
+	Project Description:
+	Target Audience / Users:
+The system is designed for billing staff, accountants, finance managers, and system administrators in SMEs or service-based organizations requiring centralized billing and revenue tracking.
+
+Potential Impact:
+The application aims to reduce billing errors, accelerate payment cycles, improve financial visibility, and streamline account reconciliation for more transparent financial operations.
+
+Technology Stack:
+•  IDE: Visual Studio Code
+•  Database: XAMPP (MySQL) via Pomelo.EntityFrameworkCore.MySql
+•  Backend: ASP.NET Core MVC / C# (.NET 10)
+•  Frontend: HTML, CSS, Bootstrap 5, JavaScript (Vanilla ES6+)
+•  ORM: Entity Framework Core 9 with Code-First Migrations
+•  PDF Generation: QuestPDF
+•  API Documentation: Swagger / Swashbuckle.AspNetCore 9.0.5
+•  CI/CD: GitHub Actions
+•  API Integration: PayMongo API (payment gateway), RESTful APIs for account integration
+•  Hosting: Local Domain / IIS / Web Hosting
+
+Why These Technologies:
+Visual Studio Code and ASP.NET Core provide a robust, scalable environment for enterprise-grade web apps. MySQL ensures data integrity and is widely supported in PH hosting environments. PayMongo offers a local Philippine payment gateway with GCash and card support. Bootstrap 5 enables responsive UI design. Entity Framework Core simplifies database access with type-safe migrations. QuestPDF enables professional-grade PDF document generation without licensing fees.
+
+
+	Type of Users/ Role-Based Access
+	
+
+1. System Super Administrator (Super Admin)
+Username: superadmin@monetacore.local 
+Password: SuperAdmin@123 
+2. System Main Administrator (Admin)
+Username: admin@monetacore.local 
+Password: Admin@123 
+
+3. Finance Manager
+Username: finance@monetacore.local        
+Password: Finance@123
+4. Billing Staff        
+Username: billing@monetacore.local        
+Password: Billing@123
+5. Accountant        
+Username: accountant@monetacore.local        
+Password: Accountant@123
+6. Auditor        
+Username: auditor@monetacore.local        
+Password: Auditor@123
+7. Client        
+Username: client@monetacore.local        
+Password: Client@123
+
+
+	Use Case Diagram
+ (Role-Based Access)
+	[See Use Case Diagram Image]
+
+
+     Use Case Diagram
+Role-Based Access for Billing Invoicing & Revenue Management System
+
+
+Super Admin
+•  Full system access — all modules and configurations
+•  Manage all user accounts, roles, and permissions across the system
+•  Configure and override system-level settings
+•  Access and manage all audit logs and security reports
+•  Activate or deactivate system modules via System Configuration panel
+•  Approve or reject pending user registrations
+ 
+Main Admin
+•  Manage user accounts and assign roles
+•  Access all modules (Invoice, Payment, Credit/Debit, Revenue, Account Integration)
+•  Configure system settings and view audit logs
+•  Approve or reject pending user registrations
+ 
+Finance Manager
+•  Oversee revenue monitoring and financial dashboards
+•  Approve credit and debit adjustments
+•  Generate and export revenue/profit-loss reports
+•  View system-wide financial KPIs and alerts
+ 
+Billing Staff
+•  Generate and send invoices to clients
+•  Track invoice payment statuses
+•  Process payment records and receipts
+•  Record credit notes and debit memos
+•  Initiate PayMongo payment sessions
+ 
+Accountant
+•  Reconcile payment transactions with invoice records
+•  Manage account integration with external accounting systems
+•  View and manage outbox integration events and dead-letter queue
+•  Generate compliance and audit reports
+ 
+Authorized Viewer / Auditor
+•  Read-only access to invoices, payments, and revenue data
+•  No create, edit, or delete permissions
+•  Access audit trails and transaction logs
+ 
+Client (External User)
+•  View own invoice history and payment records
+•  Download invoice PDFs and payment receipts
+•  Submit payment inquiries / portal disputes
+•  Initiate payment via PayMongo checkout
+
+
+	Data Dictionary
+	
+
+========================================
+TABLE: appusers
+========================================
+Field Name           | Datatype    | Length | Description
+---------------------|-------------|--------|---------------------------------------------
+Id (PK)              | int         | 11     | Auto-incremented primary key
+FullName             | varchar     | 160    | Full name of the user
+Email                | varchar     | 180    | Unique login email address
+PasswordHash         | varchar     | MAX    | BCrypt-hashed password string
+Role                 | varchar     | 60     | Assigned role (SuperAdmin, Admin, FinanceManager, BillingStaff, Accountant, Auditor, Client)
+IsActive             | tinyint     | 1      | 1 = Active, 0 = Deactivated/Pending
+ClientAccountId (FK) | int         | 11     | Links client-role users to a ClientAccount; NULL for internal staff
+CreatedAtUtc         | datetime    | 6      | UTC timestamp of account creation
+
+
+========================================
+TABLE: clientaccounts
+========================================
+Field Name       | Datatype | Length | Description
+-----------------|----------|--------|---------------------------------------------
+Id (PK)          | int      | 11     | Auto-incremented primary key
+CompanyName      | varchar  | 180    | Name of the client company or business
+ContactPerson    | varchar  | 140    | Name of the primary contact person
+Email            | varchar  | 180    | Client contact email address
+Phone            | varchar  | 40     | Client contact phone number
+Address          | varchar  | 260    | Full business address of the client
+CreatedAtUtc     | datetime | 6      | UTC timestamp when the client was registered
+
+
+========================================
+TABLE: invoices
+========================================
+Field Name          | Datatype | Length | Description
+--------------------|----------|--------|---------------------------------------------
+Id (PK)             | int      | 11     | Auto-incremented primary key
+InvoiceNumber       | varchar  | 60     | System-generated unique invoice number (e.g. INV-2026-00001)
+ClientAccountId (FK)| int      | 11     | Foreign key referencing clientaccounts.Id
+CreatedByUserId (FK)| int      | 11     | Foreign key referencing appusers.Id
+IssueDateUtc        | datetime | 6      | UTC date the invoice was issued
+DueDateUtc          | datetime | 6      | UTC payment due date
+Status              | varchar  | 30     | Invoice status: Draft, Issued, PartiallyPaid, Paid, Overdue, Cancelled
+Subtotal            | decimal  | 18,2   | Sum of all line item totals before tax
+TaxRate             | decimal  | 18,4   | Applicable tax rate as a decimal (e.g. 0.12 for 12%)
+TaxAmount           | decimal  | 18,2   | Computed tax amount (Subtotal × TaxRate)
+AdjustmentTotal     | decimal  | 18,2   | Net total of applied credit notes / debit memos
+TotalAmount         | decimal  | 18,2   | Subtotal + TaxAmount +/- AdjustmentTotal
+AmountPaid          | decimal  | 18,2   | Total amount received from all payment transactions
+BalanceDue          | decimal  | 18,2   | TotalAmount - AmountPaid; 0 when fully settled
+Notes               | varchar  | 500    | Optional free-text notes or terms
+CreatedAtUtc        | datetime | 6      | UTC timestamp of record creation
+UpdatedAtUtc        | datetime | 6      | UTC timestamp of last record update
+
+
+========================================
+TABLE: invoicelineitems
+========================================
+Field Name    | Datatype | Length | Description
+--------------|----------|--------|---------------------------------------------
+Id (PK)       | int      | 11     | Auto-incremented primary key
+InvoiceId (FK)| int      | 11     | Foreign key referencing invoices.Id
+Description   | varchar  | 220    | Description of the service or product billed
+Quantity      | decimal  | 18,4   | Number of units or hours billed
+UnitPrice     | decimal  | 18,2   | Price per unit/hour
+LineTotal     | decimal  | 18,2   | Computed value: Quantity × UnitPrice
+
+
+========================================
+TABLE: paymenttransactions
+========================================
+Field Name                 | Datatype | Length | Description
+---------------------------|----------|--------|---------------------------------------------
+Id (PK)                    | int      | 11     | Auto-incremented primary key
+InvoiceId (FK)             | int      | 11     | Foreign key referencing invoices.Id
+ProcessedByUserId (FK)     | int      | 11     | Foreign key referencing appusers.Id; nullable for gateway-initiated payments
+Amount                     | decimal  | 18,2   | Payment amount received
+Method                     | varchar  | 60     | Payment method: Cash, Bank Transfer, GCash, Card, PayMongo
+ReferenceNumber            | varchar  | 120    | Manual reference or bank transaction number
+GatewayTransactionId       | varchar  | 120    | PayMongo payment intent / checkout session ID
+Status                     | varchar  | 30     | Payment status: Pending, Completed, Failed, Refunded
+Notes                      | varchar  | 300    | Optional notes or reconciliation remarks
+PaidAtUtc                  | datetime | 6      | UTC timestamp of actual payment
+CreatedAtUtc               | datetime | 6      | UTC timestamp of record creation
+
+
+========================================
+TABLE: adjustments  (Credit/Debit)
+========================================
+Field Name              | Datatype | Length | Description
+------------------------|----------|--------|---------------------------------------------
+Id (PK)                 | int      | 11     | Auto-incremented primary key
+InvoiceId (FK)          | int      | 11     | Foreign key referencing invoices.Id
+CreatedByUserId (FK)    | int      | 11     | Foreign key referencing appusers.Id
+ApprovedByUserId (FK)   | int      | 11     | Foreign key referencing appusers.Id; nullable until approved
+Type                    | varchar  | 30     | Adjustment type: CreditNote or DebitMemo
+Amount                  | decimal  | 18,2   | Monetary value of the adjustment
+Reason                  | varchar  | 320    | Explanation or justification for the adjustment
+AppliedAtUtc            | datetime | 6      | UTC timestamp when the adjustment was applied
+
+
+========================================
+TABLE: audittrail
+========================================
+Field Name     | Datatype | Length | Description
+---------------|----------|--------|---------------------------------------------
+Id (PK)        | int      | 11     | Auto-incremented primary key
+UserId (FK)    | int      | 11     | Foreign key referencing appusers.Id; nullable for system actions
+UserName       | varchar  | 180    | Display name of the acting user at time of action
+Action         | varchar  | 100    | Action performed (e.g. InvoiceCreated, PaymentRecorded, UserApproved)
+EntityName     | varchar  | 120    | Name of the affected entity/table (e.g. Invoice, PaymentTransaction)
+EntityId       | varchar  | 80     | Primary key or identifier of the affected record
+Metadata       | varchar  | 500    | JSON-formatted context data (amounts, previous values, etc.)
+TimestampUtc   | datetime | 6      | UTC timestamp of the event
+
+
+========================================
+TABLE: accountintegrationevents
+========================================
+Field Name              | Datatype | Length | Description
+------------------------|----------|--------|---------------------------------------------
+Id (PK)                 | int      | 11     | Auto-incremented primary key
+Provider                | varchar  | 80     | Name of the external accounting provider (e.g. ExternalAccounting)
+Direction               | varchar  | 30     | Data flow direction: Export or Import
+Payload                 | longtext | —      | JSON payload sent to or received from the external system
+Status                  | varchar  | 30     | Sync status: Pending, Success, Failed
+Message                 | varchar  | 500    | Response message or error description from the integration
+CorrelationId           | varchar  | 120    | Unique trace ID for matching request/response across systems
+TriggeredByUserId (FK)  | int      | 11     | Foreign key referencing appusers.Id; nullable for scheduled syncs
+SyncedAtUtc             | datetime | 6      | UTC timestamp of the sync attempt
+
+
+========================================
+TABLE: systemconfigurationsettings  (single-row config)
+========================================
+Field Name                  | Datatype | Length | Description
+----------------------------|----------|--------|---------------------------------------------
+ManageUsersAndRolesEnabled  | tinyint  | 1      | Toggle: User/Role management module on/off
+InvoiceGenerationEnabled    | tinyint  | 1      | Toggle: Invoice module on/off
+PaymentProcessingEnabled    | tinyint  | 1      | Toggle: Payment module on/off
+CreditDebitManagementEnabled| tinyint  | 1      | Toggle: Adjustments module on/off
+RevenueMonitoringEnabled    | tinyint  | 1      | Toggle: Reports/dashboard module on/off
+AccountIntegrationEnabled   | tinyint  | 1      | Toggle: Account integration module on/off
+ViewReportsDashboardsEnabled| tinyint  | 1      | Toggle: Report/dashboard view on/off
+ViewAuditLogsEnabled        | tinyint  | 1      | Toggle: Audit trail view on/off
+MaintenanceModeEnabled      | tinyint  | 1      | When enabled, blocks all non-admin access with maintenance page
+SessionTimeoutMinutes       | int      | 11     | Idle session expiry in minutes (default: 480)
+RevenueAlertThreshold       | decimal  | 18,2   | Revenue KPI alert threshold in PHP
+PayMongoSecretKey           | varchar  | MAX    | Encrypted PayMongo secret key (stored securely via user secrets)
+AccountingApiBaseUrl        | varchar  | MAX    | Base URL of the external accounting system API
+OutboxEventsApiUrl          | varchar  | MAX    | Webhook/push URL for outbox event delivery
+IntegrationAuthMode         | varchar  | MAX    | Auth mode for integration: ApiKey or Bearer
+IntegrationApiKeyHeaderName | varchar  | MAX    | HTTP header name for API key (default: X-Api-Key)
+IntegrationApiKey           | varchar  | MAX    | API key value for external accounting connector
+IntegrationBearerToken      | varchar  | MAX    | Bearer token for external accounting connector
+AutoSyncEnabled             | tinyint  | 1      | When enabled, automatically dispatches outbox events on save
+LastUpdatedBy               | varchar  | MAX    | Username of admin who last saved the configuration
+LastUpdatedUtc              | datetime | 6      | UTC timestamp of last configuration update
+
+
+	Entity Relational Diagram (ERD)
+	
+	[ERD Diagram — See attached image]
+
+	Entity Relationships Summary:
+
+	appusers (1) ──── (M) invoices                      [CreatedByUserId]
+	appusers (1) ──── (M) paymenttransactions            [ProcessedByUserId]
+	appusers (1) ──── (M) adjustments                   [CreatedByUserId, ApprovedByUserId]
+	appusers (1) ──── (M) audittrail                    [UserId]
+	appusers (1) ──── (M) accountintegrationevents      [TriggeredByUserId]
+	appusers (M) ──── (1) clientaccounts                [ClientAccountId — for client-role users]
+
+	clientaccounts (1) ──── (M) invoices                [ClientAccountId]
+	clientaccounts (1) ──── (M) appusers                [ClientAccountId]
+
+	invoices (1) ──── (M) invoicelineitems              [InvoiceId]
+	invoices (1) ──── (M) paymenttransactions           [InvoiceId]
+	invoices (1) ──── (M) adjustments                  [InvoiceId]
+
+
+	Prototype (Frontend)
+	SCREENSHOTS AND DESCRIPTION
+
+	Figure 1 — Login Page
+	[Screenshot: Login Page]
+	Description:
+	The Login Page is the entry point to MonetaCore. Users enter their registered email address and password to authenticate. The form validates credentials against hashed passwords stored in the database using BCrypt. A "Register" link allows new external clients and staff to request access, which is then pending admin approval. Session management is enforced with a configurable idle timeout (default: 8 hours). Incorrect credentials display an inline error without revealing which field is wrong (prevents user enumeration).
+
+	Figure 2 — Dashboard (Revenue Overview)
+	[Screenshot: Dashboard]
+	Description:
+	The Dashboard provides a real-time financial overview after login. KPI summary cards display total revenue, outstanding balance, number of overdue invoices, and recent payment count. A revenue vs. expense trend chart is rendered using Chart.js. Recent invoices are listed with status badges and quick-access links. Content is role-filtered: Clients only see their own KPIs; Finance Managers and Admins see system-wide metrics. Module toggles from System Configuration determine which KPI cards are visible.
+
+	Figure 3 — Invoice Management (Index + Create)
+	[Screenshot: Invoice List and Create Invoice Form]
+	Description:
+	The Invoice Index page lists all invoices with server-side pagination, search by invoice number or client name, and status filtering (Draft, Issued, PartiallyPaid, Paid, Overdue, Cancelled). Status badges use color-coded pills for quick visual scanning. The Create Invoice form allows billing staff to select a client, add multiple line items dynamically (description, quantity, unit price), set tax rate, due date, and notes. The system auto-calculates subtotals, tax, and total in real time via JavaScript. On submission, a unique invoice number is auto-generated (format: INV-YYYY-NNNNN) and the record is saved with an audit trail entry.
+
+	Figure 4 — Payment Processing (Record Payment + PayMongo)
+	[Screenshot: Payment Form with PayMongo integration]
+	Description:
+	The Payment Create form allows billing staff to record a payment against a specific invoice. Supported methods include Cash, Bank Transfer, GCash, Card, and PayMongo. When PayMongo is selected, the system calls the PayMongo API to create a checkout session or card payment intent and redirects the client to the hosted payment page. On return, payment status is updated and the invoice's AmountPaid and BalanceDue fields are recalculated. Payment receipts and confirmation details are shown in the invoice Details view. All payment events are logged in the audit trail.
+
+	Figure 5 — Credit & Debit Adjustments
+	[Screenshot: Adjustments List and Create Form]
+	Description:
+	The Adjustments module enables billing staff to issue Credit Notes (reducing the invoice balance) or Debit Memos (increasing the balance). The create form requires selecting an invoice, specifying the adjustment type, amount, and a written reason. Adjustments require approval from a Finance Manager or Admin before they are applied to the invoice total. Once approved, the invoice's AdjustmentTotal and BalanceDue fields are automatically recalculated. All adjustments are timestamped and visible in the invoice Details view alongside the payment history.
+
+	Figure 6 — Revenue Monitoring & Reports
+	[Screenshot: Reports/Dashboard page with profit-loss table and PDF export]
+	Description:
+	The Revenue Monitoring module provides a date-range-filtered Profit & Loss report. Revenue entries represent issued/paid invoice amounts; expense entries represent debit memo adjustments. Totals are computed and displayed in a summary card. Finance Managers can export the report as a professionally formatted PDF generated by QuestPDF. The dashboard section shows historical revenue trend lines. KPI alerts are triggered when total revenue falls below the configurable RevenueAlertThreshold set in System Configuration.
+
+	Figure 7 — System Configuration
+	[Screenshot: System Configuration settings panel]
+	Description:
+	The System Configuration page is accessible only to Super Admins. It allows toggling individual system modules on or off (Invoice Generation, Payment Processing, Adjustments, Revenue Monitoring, Account Integration, Audit Logs). Additional settings include maintenance mode (blocks non-admin access), session timeout duration, revenue alert threshold, and PayMongo API key configuration. The PayMongo secret key is stored securely through environment variables or user secrets — never committed to source code. Configuration changes are logged in the audit trail.
+
+	Figure 8 — Audit Trail
+	[Screenshot: Audit Trail log table]
+	Description:
+	The Audit Trail page presents a chronological log of all significant system events. Each entry records the acting user's name, the action performed (e.g. InvoiceCreated, PaymentRecorded, AdjustmentApproved, UserApproved), the affected entity and its ID, metadata context (such as amounts or status changes), and the UTC timestamp. The log is read-only and accessible only to Auditors, Admins, and Super Admins. Entries are automatically created by the AuditService wherever a state-changing operation occurs in the controllers.
+
+	Figure 9 — Account Integration & Outbox Events
+	[Screenshot: Integrations page with event log and dead-letter queue]
+	Description:
+	The Account Integration module manages data synchronization with external accounting systems. Admins configure the external API URL, authentication mode (API Key or Bearer Token), and sync settings in System Configuration. The Integrations page displays the outbox event log with Status (Pending, Success, Failed), Provider, Direction (Export/Import), Correlation ID, and timestamp. Failed events are automatically moved to a Dead-Letter Queue for manual retry or investigation. Pagination and search are provided for both the event log and dead-letter tables.
+
+
+	Prototype (Backend)
+	SCREENSHOTS AND DESCRIPTION (Source Code)
+
+	Backend Figure 1 — AppDbContext (Data/AppDbContext.cs)
+	[Screenshot: AppDbContext.cs source code]
+	Label: Entity Framework Core Database Context
+	Description:
+	AppDbContext is the central EF Core database context that maps all domain models to MySQL tables via Pomelo.EntityFrameworkCore.MySql. It defines DbSet properties for all entities: Invoices, InvoiceLineItems, Payments, Adjustments, AuditTrail, Clients, Users, AccountIntegrationEvents, and SystemConfiguration. Fluent API configurations enforce cascade delete rules (e.g., deleting an invoice cascades to its line items and adjustments) and restrict delete for audit and payment records to preserve financial history. The context is registered in Program.cs with the MySQL connection string resolved from appsettings.json / environment variables.
+
+	Backend Figure 2 — InvoicesController.cs (Controllers/InvoicesController.cs)
+	[Screenshot: InvoicesController.cs — Create and Cancel actions]
+	Label: Invoice Generation Controller
+	Description:
+	The InvoicesController handles all invoice lifecycle operations: listing (with server-side pagination and filter), creating, viewing details, and cancelling. The Create action accepts a POST from the InvoiceCreateViewModel, validates the model state, auto-generates an invoice number via IInvoiceNumberService, calculates totals via InvoiceCalculator, saves to the database, and writes an audit entry via IAuditService. The Cancel action is gated behind the InvoiceCancellation RBAC policy. The controller is decorated with [RequireModule(SystemModule.InvoiceGeneration)] — if the module is disabled in System Configuration, all actions return a 403 Access Denied page automatically.
+
+	Backend Figure 3 — PayMongoService.cs (Services/PayMongoService.cs)
+	[Screenshot: PayMongoService.cs — CreateCheckoutSessionAsync method]
+	Label: PayMongo API Integration Service
+	Description:
+	PayMongoService implements the IPayMongoService interface and encapsulates all HTTP communication with the PayMongo REST API. The CreateCheckoutSessionAsync method constructs a JSON payload with line item details, success/cancel redirect URLs, and the client's billing information. The request is authenticated via Basic Auth using the Base64-encoded secret key. The service resolves the secret key by first checking SystemConfiguration (database), then falling back to IOptions<PayMongoOptions> (user secrets / environment variable MONETACORE_PayMongo__SecretKey). If no key is found, the service returns a simulation result, enabling development without live credentials. API/Algo Used: PayMongo API v1 — POST /v1/checkout_sessions, POST /v1/payment_intents.
+
+	Backend Figure 4 — AuditService.cs (Services/AuditService.cs)
+	[Screenshot: AuditService.cs — LogAsync method]
+	Label: Audit Trail Logging Service
+	Description:
+	The AuditService implements IAuditService and provides the LogAsync method called throughout all controllers on any state-changing operation. It receives the acting user's ID, username, the action name, the affected entity type and ID, and a metadata string (typically a JSON-serialized summary of the change). Each log entry is persisted to the AuditTrail table via AppDbContext. The service is registered as a scoped dependency in Program.cs. Audit entries are never deleted and have no cascade delete relationship — even if the related user or entity is removed.
+
+	Backend Figure 5 — Program.cs (Program.cs — Security & Middleware Pipeline)
+	[Screenshot: Program.cs — Authorization policies, middleware registration]
+	Label: Application Startup & Security Pipeline
+	Description:
+	Program.cs configures the full ASP.NET Core middleware pipeline. Key security configurations include: (1) Policy-based RBAC using AddAuthorization() with named policies mapped in Security/AuthorizationPolicies.cs — each policy specifies the exact roles allowed (e.g., FinanceManagerOnly allows only FinanceManager; BillingOperations allows BillingStaff, Admin, SuperAdmin); (2) Cookie authentication with HttpOnly, Secure, and SameSite=Lax flags; (3) Anti-forgery token validation on all POST/PUT/DELETE forms; (4) API exception handling middleware (Middleware/ApiExceptionHandlingMiddleware.cs) that returns RFC 7807 ProblemDetails for /api/ routes; (5) /healthz endpoint for availability monitoring; (6) Swagger UI enabled only when ApiDocumentation:Enabled = true (disabled in production by default).
+
+	Backend Figure 6 — RequireModuleAttribute.cs (Filters/RequireModuleAttribute.cs)
+	[Screenshot: RequireModuleAttribute.cs]
+	Label: Module Toggle Authorization Filter
+	Description:
+	RequireModuleAttribute is a custom IAsyncAuthorizationFilter that checks SystemConfigurationSettings at runtime to determine whether a given module is enabled. It is applied as [RequireModule(SystemModule.InvoiceGeneration)] on controller classes. If the targeted module's toggle is set to false in the System Configuration, the filter returns a 403 Forbidden result, preventing access to that controller's actions regardless of the user's role. This allows Super Admins to disable entire features (e.g., Payment Processing) without redeploying the application.
+
+
+	API FUNCTIONS / FEATURES
+	SCREENSHOTS AND DESCRIPTION (Source Code)
+
+	API Figure 1 — Swagger / OpenAPI Documentation  (/api/docs)
+	[Screenshot: Swagger UI at /api/docs showing available endpoints]
+	Label: RESTful API Documentation via Swagger
+	Description:
+	MonetaCore exposes a RESTful API for programmatic and external system access, documented via Swagger/OpenAPI at the /api/docs endpoint (enabled via ApiDocumentation:Enabled configuration flag). The Swagger UI lists all available API endpoints with request/response schemas, HTTP methods, authentication requirements, and example payloads. This allows external accounting connectors and third-party clients to integrate with MonetaCore without needing to inspect source code. The API is versioned and grouped by module (Invoices, Payments, Integrations).
+
+	How It Works:
+	1. Swashbuckle.AspNetCore 9.0.5 scans all controllers decorated with [ApiController] and [Route("api/...")] attributes.
+	2. XML comments and data annotations (e.g., [Required], [StringLength]) are reflected in the generated schema.
+	3. The UI is served at /api/docs (Swagger JSON at /api/docs/swagger.json).
+	4. Authentication is enforced: all API endpoints require valid session cookies and appropriate RBAC policy claims.
+	5. The Swagger UI is conditionally disabled in production unless explicitly re-enabled via configuration.
+
+	API Figure 2 — Invoices API (Controllers/Api/InvoicesApiController.cs)
+	[Screenshot: InvoicesApiController.cs source code]
+	Label: Invoice REST API Controller
+	Description:
+	The InvoicesApiController exposes HTTP endpoints for invoice operations to authorized external consumers:
+	- POST   /api/invoices          — Create a new invoice (requires BillingOperations policy)
+	- GET    /api/invoices/{id}     — Retrieve invoice details by ID
+	- PUT    /api/invoices/{id}/status — Update invoice status (requires BillingOperations policy)
+
+	How It Works:
+	1. Requests are received as JSON via [FromBody] and validated against InvoiceApiModels request DTOs.
+	2. The controller uses AppDbContext to persist changes and IInvoiceNumberService to auto-generate invoice numbers.
+	3. Responses follow RFC 7807 — errors return ProblemDetails with HTTP status codes (400, 404, 409, 500).
+	4. All write operations are logged to the audit trail via IAuditService.
+	5. Anti-forgery is not required for API endpoints (JSON-only clients); CSRF protection relies on cookie SameSite policy.
+
+	API Figure 3 — Payments API (Controllers/Api/PaymentsApiController.cs)
+	[Screenshot: PaymentsApiController.cs source code]
+	Label: Payment REST API Controller
+	Description:
+	The PaymentsApiController exposes:
+	- POST /api/payments — Record a payment transaction against an invoice (requires BillingOperations policy)
+
+	How It Works:
+	1. The request body (PaymentApiModels.CreatePaymentRequest) is validated: InvoiceId must exist, Amount must be > 0, Method must be a valid DomainValues.PaymentMethod.
+	2. If the method is PayMongo, the service delegates to IPayMongoService to initiate an API checkout session and returns the redirect URL in the response.
+	3. On successful payment, the associated invoice's AmountPaid and BalanceDue are recalculated via InvoiceCalculator and saved.
+	4. The transaction is persisted to paymenttransactions and an audit entry is written.
+	5. Error cases (invoice not found, invoice already paid, zero balance) return appropriate ProblemDetails responses.
+
+	API Figure 4 — PayMongo API Integration
+	[Screenshot: PayMongoService.cs — HTTP request construction and response handling]
+	Label: PayMongo Payment Gateway API
+	Description:
+	MonetaCore integrates with the PayMongo API (https://api.paymongo.com) to support online card and GCash payments from Philippine clients.
+
+	How It Works:
+	1. When a payment method of "PayMongo" is selected, PayMongoService.CreateCheckoutSessionAsync is called.
+	2. The service builds a JSON body with line items, amounts (in centavos), currency (PHP), success_url, and cancel_url.
+	3. An HTTP POST is sent to /v1/checkout_sessions with Basic Auth (Base64-encoded secret key).
+	4. PayMongo returns a checkout session object with a hosted payment page URL.
+	5. The user is redirected to the PayMongo-hosted page to complete payment securely.
+	6. On return (success_url callback), the payment record is updated with the GatewayTransactionId and status is set to Completed.
+	7. Invoice BalanceDue is updated accordingly.
+	Simulation Mode: If no PayMongo secret key is configured, the service returns a simulated success result with a placeholder transaction ID — enabling full workflow testing without live credentials.
+
+	API Figure 5 — Account Integration Outbox API
+	[Screenshot: IntegrationsController or outbox API controller]
+	Label: Account Integration Outbox Event API
+	Description:
+	The Account Integration module uses an outbox pattern to reliably dispatch billing events to external accounting systems.
+
+	How It Works:
+	1. When an invoice is created, paid, or cancelled, an AccountIntegrationEvent record is written to the database with Status = Pending.
+	2. The Integrations controller dispatches Pending events to the configured external API (AccountingApiBaseUrl) using HttpClient.
+	3. Authentication uses the configured mode (API Key via X-Api-Key header, or Bearer token).
+	4. Successful dispatches update the event Status to Success and record the CorrelationId.
+	5. Failed dispatches set Status to Failed and move the record to the Dead-Letter Queue.
+	6. The Integrations page in the UI displays both the live event log and dead-letter queue, with retry capability for failed events.
+	7. AutoSync can be enabled from System Configuration to automatically dispatch events on save.
+
+
+	SECURITY FEATURES
+	SCREENSHOTS AND DESCRIPTION (Source Code)
+
+	Security Feature 1 — Authentication & Cookie Session Management
+	[Screenshot: Program.cs — AddAuthentication / AddCookie configuration]
+	Label: Cookie-Based Authentication with Secure Session Management
+	Description:
+	MonetaCore uses ASP.NET Core cookie authentication for stateful session management. Passwords are hashed using BCrypt (via PasswordService/IPasswordService) — plain-text passwords are never stored.
+
+	How It Works:
+	1. On login, the system validates the user's email and verifies the BCrypt password hash via IPasswordService.VerifyPassword().
+	2. A claims-based authentication cookie is issued containing the user's ID, name, email, and role.
+	3. Cookie flags: HttpOnly (prevents JavaScript access), Secure (HTTPS-only in production), SameSite=Lax (CSRF protection).
+	4. Session timeout is configurable via SystemConfigurationSettings.SessionTimeoutMinutes (default: 480 minutes).
+	5. Deactivated users (IsActive = false) are blocked at login — their cookie claims are rejected.
+	6. Pending-approval users cannot log in until an Admin approves their registration (IsActive = false by default on self-registration).
+
+	Security Feature 2 — Role-Based Access Control (Policy-Based RBAC)
+	[Screenshot: Security/AuthorizationPolicies.cs and controller [Authorize] attributes]
+	Label: Policy-Based Authorization (RBAC)
+	Description:
+	MonetaCore implements a two-layer RBAC system: role claims on the authentication cookie and named authorization policies evaluated at the controller level.
+
+	How It Works:
+	1. Security/AuthorizationPolicies.cs defines named policy constants: SuperAdminOnly, SuperOrMainAdmin, BillingOperations, FinanceOperations, FinanceManagerOnly, ClientManagement, AuditAccess, IntegrationsOperations, InvoiceCancellation.
+	2. Each policy maps to one or more allowed roles (e.g., BillingOperations allows BillingStaff, Admin, SuperAdmin).
+	3. Controllers are decorated with [Authorize(Policy = "...")] instead of hard-coded role strings.
+	4. Any unauthorized access attempt returns a 403 Forbidden response and redirects to the Access Denied page.
+	5. The Client role has enforced data isolation — clients can only see their own invoices and payments (query filters applied in controller actions).
+	6. Super Admin has a "god mode" override — included in all policies.
+
+	Security Feature 3 — Input Validation & Anti-Forgery (CSRF Protection)
+	[Screenshot: ViewModel with [Required]/[StringLength] attributes, form with @Html.AntiForgeryToken()]
+	Label: Server-Side Validation & CSRF Token Enforcement
+	Description:
+	All user input is validated both on the client side (Bootstrap validation UI) and server side (ASP.NET model binding + Data Annotations).
+
+	How It Works:
+	1. All ViewModels use Data Annotations ([Required], [StringLength], [EmailAddress], [Range]) to define validation rules.
+	2. Controller actions check ModelState.IsValid before processing and return the form with validation errors if invalid.
+	3. All state-changing form submissions include an AntiForgeryToken generated by @Html.AntiForgeryToken() in Razor views.
+	4. The [ValidateAntiForgeryToken] attribute on all POST/PUT/DELETE actions rejects requests with missing or invalid tokens — preventing Cross-Site Request Forgery (CSRF) attacks.
+	5. EF Core parameterized queries prevent SQL Injection — no raw SQL string concatenation is used anywhere.
+	6. StringLength constraints on models map to database column length limits, preventing oversized input from reaching the database.
+
+	Security Feature 4 — Secrets Management (No Hard-Coded Credentials)
+	[Screenshot: appsettings.json showing empty PayMongo key, .env.example, and user secrets setup]
+	Label: Secure Secrets Management via User Secrets & Environment Variables
+	Description:
+	No API keys, passwords, or connection strings with credentials are committed to source control.
+
+	How It Works:
+	1. The MonetaCore.csproj defines a UserSecretsId ("monetacore-dev-secrets") for local development secret storage outside the project directory.
+	2. Sensitive values (PayMongo:SecretKey, database password) are stored in the dotnet user-secrets store during development.
+	3. In production, values are injected via environment variables with the MONETACORE_ prefix (e.g., MONETACORE_PayMongo__SecretKey).
+	4. appsettings.json only contains empty strings for sensitive fields — no real values are ever committed.
+	5. .env.example documents all required environment variables without real values, serving as a setup reference.
+	6. Production hosting should define these values directly in server environment variables or hosting control-panel settings, and they should never be committed to source control.
+
+	Security Feature 5 — Audit Trail & Logging
+	[Screenshot: AuditService.cs and Audit/Index.cshtml showing the audit log table]
+	Label: Immutable Audit Trail with Full Action Logging
+	Description:
+	Every state-changing action in the system is recorded in an immutable audit trail.
+
+	How It Works:
+	1. IAuditService.LogAsync() is called in every controller action that creates, updates, or deletes data.
+	2. Each audit entry records: acting user ID and name, action type, affected entity name and ID, metadata (JSON summary of changes), and UTC timestamp.
+	3. The audittrail table has no cascade delete — audit records persist even if related invoices or users are removed.
+	4. The Audit Trail view is accessible only to Auditors, Admins, and Super Admins (AuditAccess policy).
+	5. Audit entries are never editable from the UI — the table is strictly read-only.
+	6. Failed login attempts and access-denied events are also captured in the ASP.NET Core built-in logging pipeline (ILogger).
+
+	Security Feature 6 — Global Error Handling Middleware & Health Check
+	[Screenshot: Middleware/ApiExceptionHandlingMiddleware.cs and /healthz response]
+	Label: API Exception Handling Middleware & Health Endpoint
+	Description:
+	MonetaCore includes a global error handling middleware for the API layer and a health check endpoint for deployment monitoring.
+
+	How It Works:
+	1. ApiExceptionHandlingMiddleware intercepts all unhandled exceptions for requests to /api/ paths or requests with Accept: application/json headers.
+	2. In Development: returns a ProblemDetails response (RFC 7807) with the full exception message and stack trace for debugging.
+	3. In Production: returns a generic "An unexpected error occurred" message with a traceId — no internal details are exposed to clients.
+	4. Non-API routes fall through to ASP.NET Core's built-in error handling page (UseExceptionHandler("/Home/Error")).
+	5. The /healthz endpoint returns HTTP 200 with "Healthy" — used by uptime monitoring tools and hosting health probes to verify the application is running.
+	6. All API errors are logged via ILogger at Error level for server-side monitoring and diagnostics.

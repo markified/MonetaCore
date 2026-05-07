@@ -1,0 +1,541 @@
+﻿FINAL PROJECT DOCUMENTATION
+	NAME
+	MARK CLARENCE BALMES
+	PROJECT TITLE 
+	MonetaCore: A Web-Based Billing, Invoicing, and Revenue Management System for Service-Based Enterprises
+	SUBJECT:
+CODE:
+TIME:
+	IT15/L Integrative Programming and Technologies
+8491
+7:30pm-9:30pm
+	TOPIC (Type of Business Process)
+	#12 Financial & Billing Management Systems
+	Products/Services
+	Service-based businesses, SMEs, and enterprises requiring centralized billing, invoicing, and revenue tracking operations.
+	Website/Deployed (Link)
+	
+
+	API/ALGO/MODEL: 
+	Ex. SAP, PayMongo API, K-Nearest Neighbors (KNN)- ML Algo, etc. 
+
+
+
+
+	Security Features
+	Authentication & Authorization (RBAC), Input Validation & Sanitization, HTTPS/SSL, Logging & Audit Trail, Session Management
+	Target user/s:
+	Billing Staff, Accountants, Finance Managers, System Administrators, Authorized Viewers/Auditors, Clients (External)
+
+
+	Subs System / Management Transaction/Modules
+	
+
+Core Modules
+	Sub System
+	Management Transaction
+	1. Invoice Generation & Tracking
+
+
+	• Invoice Template Manager
+• Client Invoice Portal
+• Recurring Invoice Scheduler
+• Invoice Status Tracker
+	• Create / Edit Invoice
+• Send Invoice to Client
+• Track Invoice Status
+• Void / Cancel Invoice
+• Generate Invoice PDF
+	2. Payment Processing
+	• Payment Gateway Integration
+• Multi-Method Payment Handler
+• Receipt & Confirmation Engine
+	• Record Incoming Payment
+• Process Partial Payment
+• Issue Payment Receipt
+• Reconcile Payment vs Invoice
+• Handle Payment Failure / Retry
+	3. Credit & Debit Management
+	• Credit Note Management System
+• Debit Memo Management System
+• Account Ledger Balancer
+	• Issue Credit Note
+• Issue Debit Memo
+• Adjust Account Balance
+• Post Journal Entry
+• Review Ledger Discrepancy
+	4. Revenue Monitoring
+	• Revenue Analytics Dashboard
+• Financial Report Generator
+• Revenue Trend Engine
+• KPI & Alert Monitor
+	• Generate Revenue Summary
+• View Revenue by Period
+• Export Financial Report
+• Set Revenue Alert Threshold
+• Monitor Billing KPIs
+	5. Account Integration
+	• External Accounting Connector
+• Data Sync Engine
+• API Integration Manager
+	• Sync Billing with Accounting System
+• Import / Export Ledger Data
+• Manage API Keys & Tokens
+• Monitor Sync Logs
+• Resolve Integration Errors
+	
+
+
+
+	LOGO
+	  
+
+	Project Objectives:
+	1. To develop a comprehensive invoice generation and tracking module that automates the creation, issuance, and monitoring of client invoices in real-time.
+2. To implement a secure and efficient payment processing module that supports multiple payment methods, tracks payment statuses, and generates payment confirmations.
+3. To design a credit and debit management module that accurately records financial adjustments, manages credit notes/debit memos, and maintains balanced account ledgers.
+
+
+
+
+	Project Description:
+	Target Audience / Users:
+The system is designed for billing staff, accountants, finance managers, and system administrators in SMEs or service-based organizations requiring centralized billing and revenue tracking.
+Potential Impact:
+The application aims to reduce billing errors, accelerate payment cycles, improve financial visibility, and streamline account reconciliation for more transparent financial operations.
+Technology Stack:
+•  IDE: Visual Studio Code
+•  Database: XAMPP (MySQL)
+•  Backend: ASP.NET Core / C#
+•  Frontend: HTML, CSS, Bootstrap, JavaScript
+•  API Integration: PayMongo API (payment gateway), RESTful APIs for account integration
+•  Hosting: Local Domain / Web Hosting
+Why These Technologies:
+Visual Studio Code and ASP.NET Core provide a robust, scalable environment for enterprise-grade web apps. MY SQL ensures data integrity. PayMongo offers a local PH payment gateway. Bootstrap enables responsive UI design.
+
+
+	Type of Users/ Role-Based Access
+	
+
+1. System Super Administrator (Super Admin)
+Username: superadmin@monetacore.local 
+Password: SuperAdmin@123 
+2. System Main Administrator (Admin)
+Username:admin@monetacore.local 
+Password:Admin@123 
+
+
+3.Finance Manager
+Username: finance@monetacore.local        
+Password: Finance@123
+4.Billing Staff        
+Username: billing@monetacore.local        
+Password: Billing@123
+5.Accountant        
+Username: accountant@monetacore.local        
+Password: Accountant@123
+6.Auditor        
+Username: auditor@monetacore.local        
+Password: Auditor@123
+7.Client        
+Username: client@monetacore.local        
+Password: Client@123
+
+
+
+
+	Use Case Diagram
+ (Role-Based Access)
+	  
+
+
+     Use Case Diagram
+Role-Based Access for Billing Invoicing & Revenue Management System
+
+
+Super Admin
+•  Full system access all modules and configurations
+•  Manage all user accounts, roles, and permissions across the system
+•  Configure and override system-level settings
+•  Access and manage all audit logs and security reports
+•  Activate or deactivate system modules
+ 
+Main Admin
+•  Manage user accounts and assign roles
+•  Access all modules (Invoice, Payment, Credit/Debit, Revenue, Account Integration)
+•  Configure system settings and view audit logs
+
+
+
+
+ 
+Finance Manager
+•  Oversee revenue monitoring and financial dashboards
+•  Approve credit and debit adjustments
+•  Generate and export revenue reports
+ 
+Billing Staff
+•  Generate and send invoices to clients
+•  Track invoice payment statuses
+•  Process payment records and receipts
+•  Record credit notes and debit memos
+ 
+Accountant
+•  Reconcile payment transactions with invoice records
+•  Manage account integration with external accounting systems
+•  Generate compliance and audit reports
+ 
+Authorized Viewer / Auditor
+•  Read-only access to invoices, payments, and revenue data
+•  No create, edit, or delete permissions
+•  Access audit trails and transaction logs
+ 
+Client (External User)
+•  View own invoice history and payment records
+•  Download invoice PDFs and payment receipts
+•  Submit payment inquiries
+	Data Dictionary
+	
+
+
+
+
+
+adjustments table
+Field Names
+	Datatype
+	Length 
+	Description
+	Id PK 
+
+
+	Int
+	11
+	User’s ID Number
+	Invoice Id FK
+
+
+	Int
+	11
+	User’s Full Name
+	CreatedByUserId
+
+
+	Int
+	11
+	User’s Role/Function
+	ApprovedByUserID
+
+
+	Int
+	11
+	User’s Name or email
+	Type
+	varchar
+	30
+	User’s Password
+	Amount
+	decimal
+	18,2
+	
+
+	Reason
+	varchar
+	320
+	
+
+	AppliedAtUtc
+	datetime
+	6
+	
+
+	
+
+
+
+Audittrail
+Field Names
+	Datatype
+	Length 
+	Description
+	ID PK
+	Int
+	11
+	Employees ’s ID Number
+	UserID FK
+
+
+	Int
+	11
+	User’s ID Number
+	UserName
+	varchar
+	25
+	Employees ’s Company Number
+	Action
+	varchar
+	100
+	Employees ’s Last Name
+	EntityName
+	varchar
+	120
+	Employees ’s First Name
+	EntityId
+	varchar
+	80
+	Employees ’s Middle Name
+	Metadata
+	varchar
+	500
+	
+
+	TimestampUtc
+	Datetime 
+	6
+	
+
+	
+
+Clients
+
+
+
+
+	
+
+	
+
+	Entity Relational Diagram (ERD)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+  
+
+
+
+
+
+
+
+	Prototype (Frontend)
+	SCREENSHOTS AND DESCRIPTION
+  
+
+Figure 1
+Provide a brief description for each screen to guide users on its functionality and how to interact with it.
+	
+
+
+
+
+
+
+
+
+
+
+
+	  
+
+Figure 2
+	
+
+
+
+
+
+
+
+
+
+
+
+	  
+
+Figure 3
+	
+
+
+
+
+
+
+
+
+
+
+
+	  
+
+Figure 4
+	
+
+
+
+
+
+
+
+
+
+
+
+	  
+
+Figure 5
+	Prototype (Backend)
+	SCREENSHOTS AND DESCRIPTION (Source Code)
+Each prototype screen must include a clear screenshot.
+Add a label name to each image.
+API/Algo Usage: Mention the APIs/Algos used and their specific role in the showcased functionality.
+	
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	API FUNCTIONS/
+FEATURES
+	SCREENSHOTS AND DESCRIPTION (Source Code)
+Each prototype screen must include a clear screenshot.
+Add a label name to each image.
+Discuss the process on how it works.
+	
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	
+
+
+
+
+
+
+
+
+
+	
+
+	SECURITY FEATURES
+	SCREENSHOTS AND DESCRIPTION (Source Code)
+Each prototype screen must include a clear screenshot.
+Add a label name to each image.
+Discuss the process on how it works.
+	
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	

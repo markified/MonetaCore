@@ -1,0 +1,56 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Sign In";
+}
+
+<div class="row justify-content-center align-items-center min-vh-75 py-4">
+    <div class="col-xl-5 col-lg-6 col-md-8">
+        <div class="mb-3">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                &larr; Back to Home
+            </a>
+        </div>
+        <div class="glass-card p-4 p-md-5">
+            <div class="mb-4">
+                <img src="~/images/monetacore_logo.svg" alt="MonetaCore Logo" class="brand-full-logo" />
+            </div>
+            <p class="eyebrow">MONETACORE ACCESS</p>
+            <h1 class="hero-title mb-3">Imperial-grade billing control for modern finance teams.</h1>
+            <p class="text-muted mb-4">Secure invoice lifecycles, precise payment intelligence, and trusted revenue visibility across every role.</p>
+
+            <form asp-action="Login" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@(ViewData["ReturnUrl"] ?? string.Empty)" />
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control form-control-lg" placeholder="name@company.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control form-control-lg" placeholder="Enter your password" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="form-check mb-4">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label"></label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100">Sign in</button>
+            </form>
+
+            <div class="text-center mt-4 pt-3 border-top border-secondary-subtle">
+                <p class="small text-muted mb-2">Need client portal access?</p>
+                <a asp-action="Register" class="btn btn-outline-light">Sign up</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

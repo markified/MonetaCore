@@ -1,0 +1,206 @@
+@model DashboardViewModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Dashboard";
+
+    decimal portfolio = Model.TotalRevenue + Model.OutstandingReceivables;
+    decimal collectionRatePercent = portfolio <= 0
+        ? 0
+        : Math.Round((Model.TotalRevenue / portfolio) * 100m, 1, MidpointRounding.AwayFromZero);
+    decimal trendDelta = Model.RevenueTrend.Count >= 2
+        ? Model.RevenueTrend[^1].Revenue - Model.RevenueTrend[^2].Revenue
+        : 0m;
+}
+
+<section class="dashboard-clean mt-3">
+    <div class="page-head dashboard-head d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+        <div class="dashboard-title">
+            <p class="eyebrow mb-1">REVENUE MONITORING</p>
+            <h1 class="h2 mb-0">Financial Performance Dashboard</h1>
+            <p class="text-muted mb-0 small dashboard-inline-metrics">
+                <span>Collection rate: @collectionRatePercent.ToString("N1")%</span>
+                <span>Monthly trend delta: @trendDelta.ToString("N2")</span>
+            </p>
+        </div>
+        <div class="d-flex gap-2 page-actions dashboard-actions">
+            <a asp-controller="Invoices" asp-action="Create" class="btn btn-primary">New Invoice</a>
+            <a asp-controller="Payments" asp-action="Create" class="btn btn-outline-primary">Record Payment</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4 dashboard-metrics">
+        <div class="col-xl-2 col-md-4 col-6">
+            <article class="metric-card metric-card--clean">
+                <small>Total Revenue</small>
+                <h3>@Model.TotalRevenue.ToString("N2")</h3>
+            </article>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <article class="metric-card metric-card--clean">
+                <small>This Month</small>
+                <h3>@Model.RevenueThisMonth.ToString("N2")</h3>
+            </article>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <article class="metric-card metric-card--clean">
+                <small>Outstanding</small>
+                <h3>@Model.OutstandingReceivables.ToString("N2")</h3>
+            </article>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <article class="metric-card metric-card--clean">
+                <small>Overdue</small>
+                <h3>@Model.OverdueReceivables.ToString("N2")</h3>
+            </article>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <article class="metric-card metric-card--clean">
+                <small>Open Invoices</small>
+                <h3>@Model.OpenInvoices</h3>
+            </article>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <article class="metric-card metric-card--clean">
+                <small>Completed Payments</small>
+                <h3>@Model.CompletedPayments</h3>
+            </article>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="solid-card p-4 h-100 dashboard-panel">
+                <div class="dashboard-panel-head">
+                    <h2 class="h5 mb-0">Revenue Trend</h2>
+                </div>
+                <canvas id="revenueTrendChart" height="110"></canvas>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="solid-card p-4 h-100 dashboard-panel">
+                <div class="dashboard-panel-head">
+                    <h2 class="h5 mb-0">Top Clients</h2>
+                </div>
+                @if (Model.TopClients.Count == 0)
+                {
+                    <p class="text-muted mb-0">No invoice data yet.</p>
+                }
+                else
+                {
+                    <div class="dashboard-list">
+                        @foreach (var client in Model.TopClients)
+                        {
+                            <div class="dashboard-list-item">
+                                <div class="dashboard-list-title">@client.ClientName</div>
+                                <div class="dashboard-list-meta">
+                                    <span>Invoiced: @client.TotalInvoiced.ToString("N2")</span>
+                                    <span>Paid: @client.TotalPaid.ToString("N2")</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="solid-card p-4 dashboard-panel">
+                <div class="dashboard-panel-head">
+                    <h2 class="h5 mb-0">Recent Invoices</h2>
+                    <a asp-controller="Invoices" asp-action="Index" class="small-link">View all</a>
+                </div>
+
+                <div class="table-responsive dashboard-table">
+                    <table class="table table-hover align-middle moneta-table moneta-table--id">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Client</th>
+                                <th>Total</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @if (Model.RecentInvoices.Count == 0)
+                        {
+                        <tr class="empty-state-row"><td colspan="6"><div class="empty-state"><div class="empty-state-icon">📄</div><h3>No invoices yet</h3></div></td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in Model.RecentInvoices)
+                            {
+                                <tr>
+                                    <td><a asp-controller="Invoices" asp-action="Details" asp-route-id="@item.Id">@item.InvoiceNumber</a></td>
+                                    <td>@item.ClientName</td>
+                                    <td>@item.TotalAmount.ToString("N2")</td>
+                                    <td>@item.BalanceDue.ToString("N2")</td>
+                                    <td>
+                                        <span class="badge-status @item.Status.ToLowerInvariant()">
+                                            @(item.Status == DomainValues.InvoiceStatus.PartiallyPaid ? "Partially Paid" : item.Status)
+                                        </span>
+                                    </td>
+                                    <td>@item.DueDateUtc.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                                </tr>
+                            }
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const trendLabels = @Html.Raw(JsonSerializer.Serialize(Model.RevenueTrend.Select(x => x.MonthLabel)));
+        const trendValues = @Html.Raw(JsonSerializer.Serialize(Model.RevenueTrend.Select(x => x.Revenue)));
+
+        const rootStyle = getComputedStyle(document.documentElement);
+        const primaryColor = rootStyle.getPropertyValue('--gold-400').trim() || '#d5b45f';
+        const primaryLight = 'rgba(201, 168, 76, 0.18)';
+        const gridColor = rootStyle.getPropertyValue('--line-soft').trim() || 'rgba(201, 168, 76, 0.2)';
+        const textColor = rootStyle.getPropertyValue('--smoke-300').trim() || '#b9af9a';
+
+        const ctx = document.getElementById("revenueTrendChart");
+        if (ctx) {
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: trendLabels,
+                    datasets: [{
+                        label: "Revenue",
+                        data: trendValues,
+                        borderColor: primaryColor,
+                        backgroundColor: primaryLight,
+                        fill: true,
+                        tension: .3,
+                        pointRadius: 4,
+                        pointBackgroundColor: primaryColor
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
+                        y: {
+                            grid: { color: gridColor },
+                            ticks: {
+                                color: textColor,
+                                callback: value => Number(value).toLocaleString()
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+}

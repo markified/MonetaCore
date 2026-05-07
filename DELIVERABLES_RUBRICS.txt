@@ -1,0 +1,35 @@
+Total: 90 Points
+Criteria
+Weight
+10 Points  Excellence
+
+Database Integration
+10 Database is properly connected, structured, and supports CRUD operations
+
+MVC Structure
+10 Correct use of Models, Views, and Controllers with organized project structure
+
+API Integration
+10 API is properly created or consumed and works with the system
+
+Form Inputs & Tables
+10 Forms are complete, validated, and tables display data clearly
+
+Backend Functionality
+10 Backend processes work correctly, including create, read, update, and delete operations
+
+Clean Code
+10 Code is readable, organized, reusable, and properly commented
+
+Responsive Layout
+10 Interface works well on desktop, tablet, and mobile screens
+
+Using C#
+10 Correct and effective use of C# in ASP.NET Core development
+
+ERP Approach
+10 System clearly follows ERP concept with connected business modules
+
+
+
+

@@ -1,0 +1,191 @@
+@model MonetaCore.ViewModels.ProfitLossReportViewModel
+@{
+    ViewData["Title"] = "Reports";
+
+    int dayCount = Math.Max(1, (Model.EndDate - Model.StartDate).Days + 1);
+    decimal avgDailyRevenue = Math.Round(Model.RevenueTotal / dayCount, 2, MidpointRounding.AwayFromZero);
+    decimal avgDailyExpense = Math.Round(Model.ExpenseTotal / dayCount, 2, MidpointRounding.AwayFromZero);
+}
+
+<div class="page-head page-head--ruled d-flex justify-content-between align-items-end gap-2 mt-3">
+    <div>
+        <p class="eyebrow mb-1">FINANCIAL REPORTING</p>
+        <h1 class="h3 mb-0">Profit &amp; Loss Report</h1>
+        <p class="text-muted mb-0">Finance Manager access only. Revenue is based on completed payments, while expenses are based on recorded credit-note adjustments.</p>
+        <p class="text-muted mb-0 small reports-generated-meta">
+            <span>Generated @Model.GeneratedAtLocal.ToString("MMM dd, yyyy HH:mm")</span>
+            <span>Daily Avg Revenue: @avgDailyRevenue.ToString("N2")</span>
+            <span>Daily Avg Expense: @avgDailyExpense.ToString("N2")</span>
+        </p>
+    </div>
+    <div class="page-actions">
+        <a asp-action="ExportProfitLossPdf"
+           asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+           asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")"
+           class="btn btn-primary">Export PDF</a>
+    </div>
+</div>
+
+<div class="solid-card p-4 mb-4 reports-filter-card">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-4 col-lg-3">
+            <label class="form-label" for="startDate">Start Date</label>
+            <input class="form-control" id="startDate" name="startDate" type="date" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <label class="form-label" for="endDate">End Date</label>
+            <input class="form-control" id="endDate" name="endDate" type="date" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-4 col-lg-6">
+            <div class="page-actions justify-content-md-end">
+                <button type="submit" class="btn btn-outline-primary">Apply Filters</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="reports-summary-grid mb-4">
+    <article class="report-metric-card">
+        <span class="report-metric-label">Revenue</span>
+        <span class="report-metric-value">@Model.RevenueTotal.ToString("N2")</span>
+        <span class="report-metric-meta">@Model.RevenueEntries.Count completed payments</span>
+    </article>
+    <article class="report-metric-card">
+        <span class="report-metric-label">Expenses</span>
+        <span class="report-metric-value">@Model.ExpenseTotal.ToString("N2")</span>
+        <span class="report-metric-meta">@Model.ExpenseEntries.Count credit-note adjustments</span>
+    </article>
+    <article class="report-metric-card">
+        <span class="report-metric-label">Net Result</span>
+        <span class="report-metric-value @(Model.NetProfit < 0 ? "report-metric-value--negative" : string.Empty)">@Model.NetProfit.ToString("N2")</span>
+        <span class="report-metric-meta">P&amp;L for @Model.PeriodLabel</span>
+    </article>
+    <article class="report-metric-card">
+        <span class="report-metric-label">Margin</span>
+        <span class="report-metric-value">@Model.ProfitMarginPercent.ToString("N2")%</span>
+        <span class="report-metric-meta">Calculated from revenue minus expenses</span>
+    </article>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-5">
+        <div class="solid-card p-4 h-100">
+            <div class="report-section-head">
+                <div>
+                    <h2 class="h5 mb-0">P&amp;L Statement</h2>
+                    <div class="report-table-caption">Selected period: @Model.PeriodLabel</div>
+                </div>
+            </div>
+            <div class="report-statement">
+                <div class="report-statement-row">
+                    <span>Total revenue</span>
+                    <strong>@Model.RevenueTotal.ToString("N2")</strong>
+                </div>
+                <div class="report-statement-row">
+                    <span>Total expenses</span>
+                    <strong>@Model.ExpenseTotal.ToString("N2")</strong>
+                </div>
+                <div class="report-statement-row">
+                    <span>Net @(Model.NetProfit >= 0 ? "profit" : "loss")</span>
+                    <strong class="@(Model.NetProfit < 0 ? "report-statement-row--negative" : string.Empty)">@Model.NetProfit.ToString("N2")</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="report-note h-100 d-flex align-items-center">
+            Expenses in this project-level report are currently sourced from recorded credit-note adjustments. This keeps the P&amp;L export useful without introducing a separate accounts-payable or expense-ledger schema.
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-xl-7">
+        <div class="solid-card p-4 h-100">
+            <div class="report-section-head">
+                <div>
+                    <h2 class="h5 mb-0">Revenue Entries</h2>
+                    <div class="report-table-caption">Completed payments included in the report period</div>
+                </div>
+            </div>
+            @if (Model.RevenueEntries.Count == 0)
+            {
+                <p class="text-muted mb-0">No completed payments were recorded in this period.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle moneta-table moneta-table--id">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Invoice</th>
+                                <th>Client</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var entry in Model.RevenueEntries)
+                        {
+                            <tr>
+                                <td>@entry.PaidAtUtc.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                                <td>@entry.InvoiceNumber</td>
+                                <td>@entry.ClientName</td>
+                                <td>@entry.Method</td>
+                                <td>@(string.IsNullOrWhiteSpace(entry.ReferenceNumber) ? "-" : entry.ReferenceNumber)</td>
+                                <td class="text-end">@entry.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-xl-5">
+        <div class="solid-card p-4 h-100">
+            <div class="report-section-head">
+                <div>
+                    <h2 class="h5 mb-0">Expense Entries</h2>
+                    <div class="report-table-caption">Credit-note adjustments treated as expense rows</div>
+                </div>
+            </div>
+            @if (Model.ExpenseEntries.Count == 0)
+            {
+                <p class="text-muted mb-0">No credit-note adjustments were recorded in this period.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle moneta-table moneta-table--id">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Invoice</th>
+                                <th>Client</th>
+                                <th>Reason</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var entry in Model.ExpenseEntries)
+                        {
+                            <tr>
+                                <td>@entry.AppliedAtUtc.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                                <td>@entry.InvoiceNumber</td>
+                                <td>@entry.ClientName</td>
+                                <td>@(string.IsNullOrWhiteSpace(entry.Reason) ? "No reason provided" : entry.Reason)</td>
+                                <td class="text-end">@entry.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

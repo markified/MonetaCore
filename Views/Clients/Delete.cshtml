@@ -1,0 +1,47 @@
+@model ClientAccount
+@{
+    ViewData["Title"] = "Delete Client";
+    int invoiceCount = ViewBag.InvoiceCount is int count ? count : 0;
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-8">
+        <div class="solid-card p-4">
+            <h1 class="h4 mb-3">Delete Client Account</h1>
+            <p class="text-muted">Review the client record before deletion.</p>
+
+            <dl class="row">
+                <dt class="col-sm-4">Company</dt>
+                <dd class="col-sm-8">@Model.CompanyName</dd>
+
+                <dt class="col-sm-4">Contact Person</dt>
+                <dd class="col-sm-8">@Model.ContactPerson</dd>
+
+                <dt class="col-sm-4">Email</dt>
+                <dd class="col-sm-8">@Model.Email</dd>
+
+                <dt class="col-sm-4">Phone</dt>
+                <dd class="col-sm-8">@Model.Phone</dd>
+
+                <dt class="col-sm-4">Address</dt>
+                <dd class="col-sm-8">@Model.Address</dd>
+            </dl>
+
+            @if (invoiceCount > 0)
+            {
+                <div class="alert alert-warning border-0">
+                    This client has @invoiceCount invoice(s). Please archive or cancel related invoices before deletion.
+                </div>
+            }
+
+            <form asp-action="DeleteConfirmed" method="post" class="mt-4">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="d-flex gap-2 page-actions">
+                    <button type="submit" class="btn btn-danger" @(invoiceCount > 0 ? "disabled" : string.Empty)>Delete Client</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

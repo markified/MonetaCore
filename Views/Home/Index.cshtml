@@ -1,0 +1,209 @@
+﻿@{
+    ViewData["Title"] = "MonetaCore";
+    ViewData["BodyClass"] = "landing-page";
+    ViewData["IsLanding"] = true;
+    bool isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+}
+
+<section class="landing-hero" id="top">
+    <div class="landing-container landing-hero-inner">
+        <span class="landing-pill">Unified Billing &amp; Revenue System</span>
+        <h1 class="landing-hero-title">Where <span class="landing-hero-emphasis">finance</span> meets precision and clarity.</h1>
+        <p class="landing-hero-lede">MonetaCore is a web-based billing, invoicing, and revenue management platform built for service-based enterprises and SMEs that demand accuracy, security, and real-time visibility.</p>
+        <div class="landing-hero-actions">
+            @if (isAuthenticated)
+            {
+                <a asp-controller="Dashboard" asp-action="Index" class="landing-btn landing-btn--primary">Open Dashboard</a>
+                <a asp-controller="Invoices" asp-action="Index" class="landing-btn landing-btn--ghost">Explore Modules</a>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Register" class="landing-btn landing-btn--primary">Sign Up</a>
+                <a asp-controller="Account" asp-action="Login" class="landing-btn landing-btn--ghost">Sign In</a>
+            }
+        </div>
+        <div class="landing-hero-logo-frame">
+            <img src="~/images/monetacore_logo.svg" alt="MonetaCore Logo" class="landing-hero-logo" />
+        </div>
+    </div>
+</section>
+
+<section class="landing-stats" aria-label="Platform highlights">
+    <div class="landing-container landing-stats-card">
+        <div class="landing-stat">
+            <div class="landing-stat-value">5</div>
+            <div class="landing-stat-label">Core Modules</div>
+        </div>
+        <div class="landing-stat">
+            <div class="landing-stat-value">7</div>
+            <div class="landing-stat-label">Integrations</div>
+        </div>
+        <div class="landing-stat">
+            <div class="landing-stat-value">100%</div>
+            <div class="landing-stat-label">Audit Coverage</div>
+        </div>
+        <div class="landing-stat">
+            <div class="landing-stat-value">24/7</div>
+            <div class="landing-stat-label">Revenue Monitoring</div>
+        </div>
+    </div>
+</section>
+
+<section class="landing-section" id="modules">
+    <div class="landing-container">
+        <div class="landing-section-header">
+            <p class="landing-eyebrow">Core Capabilities</p>
+            <h2 class="landing-section-title">Built for the modern <span class="landing-hero-emphasis">finance</span> team</h2>
+            <p class="landing-section-lede">Five integrated modules that automate every step of your billing lifecycle.</p>
+        </div>
+        <div class="landing-card-grid">
+            <article class="landing-card">
+                <div class="landing-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 3h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+                        <path d="M14 3v5h5" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+                        <path d="M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+                    </svg>
+                </div>
+                <h3>Invoice Generation &amp; Tracking</h3>
+                <p>Automate invoice creation, scheduling, and real-time status tracking with custom templates and a client portal.</p>
+            </article>
+            <article class="landing-card">
+                <div class="landing-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+                        <path d="M3 10h18" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+                        <path d="M7 15h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+                    </svg>
+                </div>
+                <h3>Payment Processing</h3>
+                <p>Accept multiple payment methods via PayMongo, reconcile transactions, and issue receipts instantly.</p>
+            </article>
+            <article class="landing-card">
+                <div class="landing-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M7 7h10v10H7z" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+                        <path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+                        <path d="M9 5l-2 2 2 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M15 19l2-2-2-2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </div>
+                <h3>Credit &amp; Debit Management</h3>
+                <p>Issue credit notes, debits, and keep account ledgers balanced with full audit trails.</p>
+            </article>
+            <article class="landing-card">
+                <div class="landing-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 17l5-5 4 4 7-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M20 9V4h-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </div>
+                <h3>Revenue Monitoring</h3>
+                <p>Real-time dashboards, KPI alerts, and exportable financial reports for data-driven decisions.</p>
+            </article>
+            <article class="landing-card">
+                <div class="landing-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+                        <path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7L12.5 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+                    </svg>
+                </div>
+                <h3>Account Integration</h3>
+                <p>Sync seamlessly with external accounting systems through secure APIs and managed workflows.</p>
+            </article>
+            <article class="landing-card">
+                <div class="landing-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 22s8-4 8-10V6l-8-4-8 4v6c0 6 8 10 8 10z" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+                        <path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </div>
+                <h3>Enterprise Security</h3>
+                <p>Role-based access, encryption, audit logging, and hardened session management.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="landing-section landing-roles" id="roles">
+    <div class="landing-container landing-split">
+        <div class="landing-split-text">
+            <p class="landing-eyebrow">Role-based access</p>
+            <h2 class="landing-section-title">Granular control for every <span class="landing-hero-emphasis">stakeholder</span></h2>
+            <p class="landing-section-lede">From super admins to external clients, MonetaCore enforces strict permission boundaries with comprehensive audit trails to keep operations secure and compliant.</p>
+            <ul class="landing-list">
+                <li>Authentication and authorization (RBAC)</li>
+                <li>Input validation and sanitization</li>
+                <li>Audit and compliance monitoring</li>
+            </ul>
+        </div>
+        <div class="landing-role-grid">
+            <div class="landing-role-card">
+                <span class="landing-role-label">Role 01</span>
+                <span class="landing-role-name">Super Admin</span>
+            </div>
+            <div class="landing-role-card">
+                <span class="landing-role-label">Role 02</span>
+                <span class="landing-role-name">Main Admin</span>
+            </div>
+            <div class="landing-role-card">
+                <span class="landing-role-label">Role 03</span>
+                <span class="landing-role-name">Finance Manager</span>
+            </div>
+            <div class="landing-role-card">
+                <span class="landing-role-label">Role 04</span>
+                <span class="landing-role-name">Billing Staff</span>
+            </div>
+            <div class="landing-role-card">
+                <span class="landing-role-label">Role 05</span>
+                <span class="landing-role-name">Accountant</span>
+            </div>
+            <div class="landing-role-card">
+                <span class="landing-role-label">Role 06</span>
+                <span class="landing-role-name">Auditor</span>
+            </div>
+            <div class="landing-role-card">
+                <span class="landing-role-label">Role 07</span>
+                <span class="landing-role-name">Client Portal</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="landing-section landing-tech" id="technology">
+    <div class="landing-container">
+        <div class="landing-section-header">
+            <p class="landing-eyebrow">Technology</p>
+            <h2 class="landing-section-title">Precision tooling for trusted revenue operations</h2>
+            <p class="landing-section-lede">Secure integrations, audit-ready records, and real-time visibility built into every workflow.</p>
+        </div>
+        <div class="landing-tech-grid">
+            <article class="landing-tech-card">
+                <h3>Revenue Monitoring</h3>
+                <p>Real-time dashboards, KPI alerts, and exportable reports keep teams ahead of every change.</p>
+            </article>
+            <article class="landing-tech-card">
+                <h3>Account Integration</h3>
+                <p>Connect external accounting systems with secure APIs, managed syncs, and clear data lineage.</p>
+            </article>
+            <article class="landing-tech-card">
+                <h3>Enterprise Security</h3>
+                <p>Role-based access, encryption at rest, and continuous audit logging protect every transaction.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="landing-cta" id="contact">
+    <div class="landing-container">
+        <div class="landing-cta-card">
+            <p class="landing-cta-kicker">Finance Director, Service Enterprise SME</p>
+            <h2 class="landing-cta-title">Take command of your <span class="landing-hero-emphasis">revenue</span>.</h2>
+            <p class="landing-cta-lede">Schedule a personalized walkthrough of MonetaCore and see how it transforms your billing operations.</p>
+            <div class="landing-hero-actions">
+                <a asp-controller="Account" asp-action="Register" class="landing-btn landing-btn--primary">Sign Up</a>
+                <a href="mailto:sales@monetacore.com" class="landing-btn landing-btn--ghost">Contact Sales</a>
+            </div>
+        </div>
+    </div>
+</section>

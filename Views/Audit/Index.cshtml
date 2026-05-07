@@ -1,0 +1,48 @@
+@model IReadOnlyList<AuditTrailEntry>
+@{
+    ViewData["Title"] = "Audit Trail";
+}
+
+<div class="page-head page-head--ruled d-flex justify-content-between align-items-end gap-2 mt-3">
+    <div>
+        <p class="eyebrow mb-1">COMPLIANCE & TRACEABILITY</p>
+        <h1 class="h3 mb-0">Audit Trail</h1>
+    </div>
+</div>
+
+<div class="solid-card p-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle moneta-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>Entity ID</th>
+                    <th>Metadata</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr class="empty-state-row"><td colspan="6"><div class="empty-state"><div class="empty-state-icon">🔍</div><h3>No audit entries yet</h3><p>Activity will appear here as users interact with the system.</p></div></td></tr>
+            }
+            else
+            {
+                @foreach (var entry in Model)
+                {
+                    <tr>
+                        <td>@entry.TimestampUtc.ToLocalTime().ToString("MMM dd, yyyy HH:mm:ss")</td>
+                        <td>@(string.IsNullOrWhiteSpace(entry.UserName) ? "System" : entry.UserName)</td>
+                        <td>@entry.Action</td>
+                        <td>@entry.EntityName</td>
+                        <td>@entry.EntityId</td>
+                        <td class="text-break">@entry.Metadata</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

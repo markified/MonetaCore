@@ -1,0 +1,200 @@
+NAME
+MARK CLARENCE P. BALMES
+
+PROJECT TITLE
+MonetaCore: A Web-Based Billing, Invoicing, and Revenue Management System for Service-Based Enterprises
+
+SUBJECT:
+IT15/L Integrative Programming and Technologies
+
+CODE:
+8491
+
+TIME:
+7:30pm-9:30pm
+
+TOPIC (Type of Business Process)
+#12 Financial & Billing Management Systems
+
+Products/Services
+Service-based businesses, SMEs, and enterprises requiring centralized billing, invoicing, and revenue tracking operations.
+
+Tools Needed
+- Visual Studio Code - IDE
+- XAMPP
+- Domain
+- Hosting
+- GitHub
+
+Technology
+ASP.NET Core (C#), HTML/CSS/Bootstrap/JavaScript, PayMongo API, RESTful API Integration, MySQL, Entity Framework Core
+
+Security Features
+Authentication & Authorization (RBAC), Input Validation & Sanitization, HTTPS/SSL, Logging & Audit Trail, Session Management
+
+Target User/s
+Billing Staff, Accountants, Finance Managers, System Administrators, Authorized Viewers/Auditors, Clients (External)
+
+Sub System / Management Transaction / Modules
+
+Core Module 1: Invoice Generation & Tracking
+Sub System
+- Invoice Template Manager
+- Client Invoice Portal
+- Recurring Invoice Scheduler
+- Invoice Status Tracker
+Management Transaction
+- Create / Edit Invoice
+- Send Invoice to Client
+- Track Invoice Status
+- Void / Cancel Invoice
+- Generate Invoice PDF
+
+Core Module 2: Payment Processing
+Sub System
+- Payment Gateway Integration
+- Multi-Method Payment Handler
+- Receipt & Confirmation Engine
+Management Transaction
+- Record Incoming Payment
+- Process Partial Payment
+- Issue Payment Receipt
+- Reconcile Payment vs Invoice
+- Handle Payment Failure / Retry
+
+Core Module 3: Credit & Debit Management
+Sub System
+- Credit Note Management System
+- Debit Memo Management System
+- Account Ledger Balancer
+Management Transaction
+- Issue Credit Note
+- Issue Debit Memo
+- Adjust Account Balance
+- Post Journal Entry
+- Review Ledger Discrepancy
+
+Core Module 4: Revenue Monitoring
+Sub System
+- Revenue Analytics Dashboard
+- Financial Report Generator
+- Revenue Trend Engine
+- KPI & Alert Monitor
+Management Transaction
+- Generate Revenue Summary
+- View Revenue by Period
+- Export Financial Report
+- Set Revenue Alert Threshold
+- Monitor Billing KPIs
+
+Core Module 5: Account Integration
+Sub System
+- External Accounting Connector
+- Data Sync Engine
+- API Integration Manager
+Management Transaction
+- Sync Billing with Accounting System
+- Import / Export Ledger Data
+- Manage API Keys & Tokens
+- Monitor Sync Logs
+- Resolve Integration Errors
+
+Core Module 6: System Configuration & Settings
+Sub System
+- System Configuration Manager
+- Access Policy Control
+- Integration Settings Manager
+Management Transaction
+- Configure system parameters
+- Manage role-based access rules
+- Maintain integration credentials
+- Monitor system configuration updates
+
+Project Objectives
+1. To develop a comprehensive invoice generation and tracking module that automates the creation, issuance, and monitoring of client invoices in real-time.
+2. To implement a secure and efficient payment processing module that supports multiple payment methods, tracks payment statuses, and generates payment confirmations.
+3. To design a credit and debit management module that accurately records financial adjustments, manages credit notes/debit memos, and maintains balanced account ledgers.
+4. To build a revenue monitoring dashboard that provides real-time analytics, financial summaries, and trend reports to support data-driven business decisions.
+5. To create an account integration module that seamlessly synchronizes billing data with external accounting systems, ensuring consistency and accuracy across financial platforms.
+
+Project Description
+
+Target Audience / Users
+The system is designed for billing staff, accountants, finance managers, and system administrators in SMEs or service-based organizations requiring centralized billing and revenue tracking.
+
+Potential Impact
+The application aims to reduce billing errors, accelerate payment cycles, improve financial visibility, and streamline account reconciliation for more transparent financial operations.
+
+Technology Stack
+- IDE: Visual Studio Code
+- Database: XAMPP (MySQL)
+- Backend: ASP.NET Core / C#
+- Frontend: HTML, CSS, Bootstrap, JavaScript
+- API Integration: PayMongo API (payment gateway), RESTful APIs for account integration
+- Hosting: Local Domain / Web Hosting
+
+Why These Technologies
+Visual Studio Code and ASP.NET Core provide a robust, scalable environment for enterprise-grade web apps. MySQL ensures data integrity. PayMongo offers a local PH payment gateway. Bootstrap enables responsive UI design.
+
+Use Case Diagram (Role-Based Access)
+
+Super Admin
+- Full system access all modules and configurations
+- Manage all user accounts, roles, and permissions across the system
+- Configure and override system-level settings
+- Access and manage all audit logs and security reports
+- Activate or deactivate system modules
+
+Main Admin
+- Manage user accounts and assign roles
+- Access all modules (Invoice, Payment, Credit/Debit, Revenue, Account Integration)
+- Configure system settings and view audit logs
+
+Finance Manager
+- Oversee revenue monitoring and financial dashboards
+- Approve credit and debit adjustments
+- Generate and export revenue reports
+
+Billing Staff
+- Generate and send invoices to clients
+- Track invoice payment statuses
+- Process payment records and receipts
+- Record credit notes and debit memos
+
+Accountant
+- Reconcile payment transactions with invoice records
+- Manage account integration with external accounting systems
+- Generate compliance and audit reports
+
+Authorized Viewer / Auditor
+- Read-only access to invoices, payments, and revenue data
+- No create, edit, or delete permissions
+- Access audit trails and transaction logs
+
+Client (External User)
+- View own invoice history and payment records
+- Download invoice PDFs and payment receipts
+- Submit payment inquiries
+
+Date Submitted:
+
+Teacher's Feedback
+_________________________________________________________________
+_________________________________________________________________
+_________________________________________________________________
+_________________________________________________________________
+_________________________________________________________________
+_________________________________________________________________
+
+________________________________            __________________________
+Student's Signature (after feedbacking)      Teacher's Signature
+
+
+
+
+
+
+
+
+
+

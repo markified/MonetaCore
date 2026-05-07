@@ -1,0 +1,67 @@
+@model IReadOnlyList<MonetaCore.Models.AppUser>
+@{
+    ViewData["Title"] = "Pending Sign-ups";
+}
+
+<div class="page-head mb-4">
+    <div>
+        <p class="eyebrow mb-2">Account Review</p>
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+            <h1 class="hero-title mb-0">Pending sign-up requests</h1>
+            <span class="badge-status pending review-count-badge">@Model.Count pending</span>
+        </div>
+        <p class="text-muted mb-0">Review new client portal access requests and approve or reject them individually.</p>
+    </div>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="glass-card p-4 p-md-5 text-center">
+        <h2 class="h4 mb-2">No pending requests</h2>
+        <p class="text-muted mb-0">All submitted sign-up requests have already been processed.</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 moneta-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Email</th>
+                    <th>Requested</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">@user.FullName</div>
+                            <div class="small text-muted">@user.Role</div>
+                        </td>
+                        <td>@(user.ClientAccount?.CompanyName ?? "-")</td>
+                        <td>@user.Email</td>
+                        <td>@user.CreatedAtUtc.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt")</td>
+                        <td>
+                            <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                <form asp-action="ApproveRegistration" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="userId" value="@user.Id" />
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form asp-action="RejectRegistration" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="userId" value="@user.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

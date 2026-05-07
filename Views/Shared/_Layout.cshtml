@@ -1,0 +1,183 @@
+﻿@using System.Security.Claims
+@{
+    bool isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+    string role = User?.FindFirst(ClaimTypes.Role)?.Value ?? "Guest";
+    string userName = User?.Identity?.Name ?? "User";
+    string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    Func<string, string> navClass = controller => string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
+        ? "chip-link active"
+        : "chip-link";
+    Func<string, string> dropdownClass = controller => string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
+        ? "dropdown-item active"
+        : "dropdown-item";
+    bool isSuperAdmin = User?.IsInRole(ApplicationRoles.SuperAdmin) ?? false;
+    bool isMainAdmin = User?.IsInRole(ApplicationRoles.MainAdmin) ?? false;
+    bool isBillingStaff = User?.IsInRole(ApplicationRoles.BillingStaff) ?? false;
+    bool isAccountant = User?.IsInRole(ApplicationRoles.Accountant) ?? false;
+    bool isFinanceManager = User?.IsInRole(ApplicationRoles.FinanceManager) ?? false;
+    bool isAuditor = User?.IsInRole(ApplicationRoles.Auditor) ?? false;
+    bool showClients = isSuperAdmin || isMainAdmin || isBillingStaff || isAccountant || isFinanceManager;
+    bool showAccountingLinks = isSuperAdmin || isMainAdmin || isAccountant || isFinanceManager;
+    bool showReports = isFinanceManager;
+    bool showAudit = isSuperAdmin || isMainAdmin || isAuditor;
+    bool showSecondaryNav = isSuperAdmin || showAccountingLinks || showAudit;
+    bool isLanding = ViewData["IsLanding"] as bool? ?? false;
+    string bodyClass = ViewData["BodyClass"] as string ?? string.Empty;
+    string homeUrl = Url.Action("Index", "Home") ?? "/";
+    string modulesLink = $"{homeUrl}#modules";
+    string rolesLink = $"{homeUrl}#roles";
+    string technologyLink = $"{homeUrl}#technology";
+    string contactLink = $"{homeUrl}#contact";
+    string brandController = isAuthenticated ? "Dashboard" : "Home";
+    string brandAction = "Index";
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MonetaCore</title>
+    <script type="importmap"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/MonetaCore.styles.css" asp-append-version="true" />
+</head>
+<body class="@bodyClass">
+    <div class="ambient-bg"></div>
+    <header class="top-shell">
+        <div class="container-fluid px-3 px-md-4 py-3 top-shell-inner">
+            <a class="brand-mark" asp-controller="@brandController" asp-action="@brandAction">
+                <img src="~/images/monetacore_logo.svg" alt="MonetaCore Logo" class="brand-lockup" />
+            </a>
+
+            @if (isAuthenticated)
+            {
+                <button class="btn btn-sm btn-outline-light menu-toggle d-lg-none ms-auto" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#monetaHeaderPanel"
+                        aria-controls="monetaHeaderPanel" aria-expanded="false" aria-label="Toggle navigation">
+                    Menu
+                </button>
+
+                <div class="collapse moneta-header-panel d-lg-flex align-items-lg-center" id="monetaHeaderPanel">
+                    <nav class="moneta-nav" aria-label="Primary navigation">
+                        <div class="nav-group nav-group--primary">
+                            <a asp-controller="Dashboard" asp-action="Index" class="@navClass("Dashboard")">Dashboard</a>
+                            <a asp-controller="Invoices" asp-action="Index" class="@navClass("Invoices")">Invoices</a>
+                            <a asp-controller="Payments" asp-action="Index" class="@navClass("Payments")">Payments</a>
+                            @if (showClients)
+                            {
+                                <a asp-controller="Clients" asp-action="Index" class="@navClass("Clients")">Clients</a>
+                            }
+                            @if (showSecondaryNav)
+                            {
+                                <div class="dropdown nav-more">
+                                    <button class="chip-link dropdown-toggle nav-more-toggle" type="button" id="navMoreMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                                        More
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navMoreMenu">
+                                        @if (isSuperAdmin)
+                                        {
+                                            <li><a asp-controller="SystemConfiguration" asp-action="Index" class="@dropdownClass("SystemConfiguration")">System Config</a></li>
+                                        }
+
+                                        @if (isSuperAdmin || isMainAdmin)
+                                        {
+                                            <li><a asp-controller="Account" asp-action="PendingRegistrations" class="@dropdownClass("Account")">Pending Sign-ups</a></li>
+                                        }
+
+                                        @if (showAccountingLinks)
+                                        {
+                                            <li><a asp-controller="Adjustments" asp-action="Index" class="@dropdownClass("Adjustments")">Credit/Debit</a></li>
+                                            <li><a asp-controller="Integrations" asp-action="Index" class="@dropdownClass("Integrations")">Integrations</a></li>
+                                        }
+
+                                        @if (showReports)
+                                        {
+                                            <li><a asp-controller="Reports" asp-action="Index" class="@dropdownClass("Reports")">Reports</a></li>
+                                        }
+
+                                        @if (showAudit)
+                                        {
+                                            <li><a asp-controller="Audit" asp-action="Index" class="@dropdownClass("Audit")">Audit Trail</a></li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    </nav>
+
+                    <div class="moneta-tools d-flex align-items-center gap-2 ms-lg-3">
+                        <div class="theme-switch form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" id="themeToggle" role="switch" aria-label="Toggle color theme" />
+                            <label class="form-check-label" for="themeToggle">Dark</label>
+                        </div>
+
+                        <div class="user-meta d-flex align-items-center gap-2">
+                            <span class="role-pill">@role</span>
+                            <span class="fw-semibold">@userName</span>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-light">Sign out</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (isLanding)
+            {
+                <button class="btn btn-sm btn-outline-light menu-toggle landing-menu-toggle d-lg-none ms-auto" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#landingHeaderPanel"
+                        aria-controls="landingHeaderPanel" aria-expanded="false" aria-label="Toggle navigation">
+                    Menu
+                </button>
+
+                <div class="collapse landing-header-panel d-lg-flex align-items-lg-center" id="landingHeaderPanel">
+                    <nav class="landing-nav" aria-label="Primary navigation">
+                        <a class="landing-nav-link" href="@modulesLink">Modules</a>
+                        <a class="landing-nav-link" href="@rolesLink">Roles</a>
+                        <a class="landing-nav-link" href="@technologyLink">Technology</a>
+                        <a class="landing-nav-link" href="@contactLink">Contact</a>
+                    </nav>
+
+                    <div class="landing-header-actions">
+                        <a asp-controller="Account" asp-action="Login" class="landing-nav-link landing-signin">Sign In</a>
+                        <a asp-controller="Account" asp-action="Register" class="landing-btn landing-btn--primary landing-request">Sign Up</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </header>
+
+    <main class="app-main container-fluid px-3 px-md-4 pb-4">
+        @if (TempData["Success"] is string success)
+        {
+            <div class="alert alert-success shadow-sm mt-3 d-flex align-items-start gap-2" role="alert">
+                <span class="alert-icon" aria-hidden="true">✓</span>
+                <span>@success</span>
+            </div>
+        }
+
+        @if (TempData["Error"] is string error)
+        {
+            <div class="alert alert-danger shadow-sm mt-3 d-flex align-items-start gap-2" role="alert">
+                <span class="alert-icon" aria-hidden="true">✕</span>
+                <span>@error</span>
+            </div>
+        }
+
+        @RenderBody()
+    </main>
+
+    <footer class="footer-note text-center pb-4">
+        <small>UNIFIED BILLING &amp; REVENUE MANAGEMENT SYSTEM</small>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

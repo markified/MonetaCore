@@ -1,0 +1,165 @@
+@model SystemConfigurationViewModel
+@{
+    ViewData["Title"] = "System Configuration";
+}
+
+<div class="page-head d-flex justify-content-between align-items-end gap-2 mt-3 mb-3">
+    <div>
+        <p class="eyebrow mb-1">SYSTEM CONFIGURATION &amp; SETTINGS</p>
+        <h1 class="h3 mb-0">Super Admin Control Center</h1>
+        <p class="text-muted mb-0 small">Exclusive module access for system-wide configuration and governance.</p>
+    </div>
+    <div class="page-actions">
+        <span class="badge-status issued">SUPER ADMIN ONLY</span>
+    </div>
+</div>
+
+<form asp-action="Save" method="post" class="solid-card p-4">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <h2 class="h5 mb-3">Module Access Flags</h2>
+            <div class="d-flex flex-column gap-2">
+                <div class="form-check">
+                    <input asp-for="ManageUsersAndRolesEnabled" class="form-check-input" />
+                    <label asp-for="ManageUsersAndRolesEnabled" class="form-check-label"></label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="InvoiceGenerationEnabled" class="form-check-input" />
+                    <label asp-for="InvoiceGenerationEnabled" class="form-check-label"></label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="PaymentProcessingEnabled" class="form-check-input" />
+                    <label asp-for="PaymentProcessingEnabled" class="form-check-label"></label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="CreditDebitManagementEnabled" class="form-check-input" />
+                    <label asp-for="CreditDebitManagementEnabled" class="form-check-label"></label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="RevenueMonitoringEnabled" class="form-check-input" />
+                    <label asp-for="RevenueMonitoringEnabled" class="form-check-label"></label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="AccountIntegrationEnabled" class="form-check-input" />
+                    <label asp-for="AccountIntegrationEnabled" class="form-check-label"></label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="ViewReportsDashboardsEnabled" class="form-check-input" />
+                    <label asp-for="ViewReportsDashboardsEnabled" class="form-check-label"></label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="ViewAuditLogsEnabled" class="form-check-input" />
+                    <label asp-for="ViewAuditLogsEnabled" class="form-check-label"></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <h2 class="h5 mb-3">Global Settings</h2>
+            <div class="mb-3">
+                <label asp-for="SessionTimeoutMinutes" class="form-label"></label>
+                <input asp-for="SessionTimeoutMinutes" class="form-control" />
+                <span asp-validation-for="SessionTimeoutMinutes" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="RevenueAlertThreshold" class="form-label"></label>
+                <input asp-for="RevenueAlertThreshold" class="form-control" />
+                <span asp-validation-for="RevenueAlertThreshold" class="text-danger small"></span>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="MaintenanceModeEnabled" class="form-check-input" />
+                <label asp-for="MaintenanceModeEnabled" class="form-check-label"></label>
+            </div>
+
+            <h2 class="h5 mb-3">Integration Configuration</h2>
+            <div class="mb-3">
+                <label asp-for="AccountingApiBaseUrl" class="form-label"></label>
+                <input asp-for="AccountingApiBaseUrl" class="form-control" placeholder="https://api.example.com/accounting" type="url" />
+                <span asp-validation-for="AccountingApiBaseUrl" class="text-danger small"></span>
+                <div class="form-text text-muted">Leave blank to use appsettings defaults.</div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="MaskedPayMongoSecretKey" class="form-label"></label>
+                <input asp-for="MaskedPayMongoSecretKey" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="NewPayMongoSecretKey" class="form-label"></label>
+                <input asp-for="NewPayMongoSecretKey" class="form-control" type="password" autocomplete="new-password" />
+                <span asp-validation-for="NewPayMongoSecretKey" class="text-danger small"></span>
+                <div class="form-text text-muted">Leave empty to keep the current PayMongo secret key.</div>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="ClearPayMongoSecretKey" class="form-check-input" />
+                <label asp-for="ClearPayMongoSecretKey" class="form-check-label"></label>
+            </div>
+            <div class="mb-3">
+                <label asp-for="OutboxEventsApiUrl" class="form-label"></label>
+                <input asp-for="OutboxEventsApiUrl" class="form-control" placeholder="https://api.example.com/integration-events" type="url" />
+                <span asp-validation-for="OutboxEventsApiUrl" class="text-danger small"></span>
+                <div class="form-text text-muted">Optional explicit endpoint for outbox event delivery.</div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="IntegrationAuthMode" class="form-label"></label>
+                <select asp-for="IntegrationAuthMode" class="form-select">
+                    <option value="None">None</option>
+                    <option value="ApiKey">API Key</option>
+                    <option value="Bearer">Bearer Token</option>
+                </select>
+                <span asp-validation-for="IntegrationAuthMode" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="IntegrationApiKeyHeaderName" class="form-label"></label>
+                <input asp-for="IntegrationApiKeyHeaderName" class="form-control" placeholder="X-Api-Key" />
+                <span asp-validation-for="IntegrationApiKeyHeaderName" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="MaskedIntegrationApiKey" class="form-label"></label>
+                <input asp-for="MaskedIntegrationApiKey" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="NewIntegrationApiKey" class="form-label"></label>
+                <input asp-for="NewIntegrationApiKey" class="form-control" type="password" autocomplete="new-password" />
+                <span asp-validation-for="NewIntegrationApiKey" class="text-danger small"></span>
+                <div class="form-text text-muted">Leave empty to keep the current API key.</div>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="ClearIntegrationApiKey" class="form-check-input" />
+                <label asp-for="ClearIntegrationApiKey" class="form-check-label"></label>
+            </div>
+            <div class="mb-3">
+                <label asp-for="MaskedIntegrationBearerToken" class="form-label"></label>
+                <input asp-for="MaskedIntegrationBearerToken" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="NewIntegrationBearerToken" class="form-label"></label>
+                <input asp-for="NewIntegrationBearerToken" class="form-control" type="password" autocomplete="new-password" />
+                <span asp-validation-for="NewIntegrationBearerToken" class="text-danger small"></span>
+                <div class="form-text text-muted">Leave empty to keep the current bearer token.</div>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="ClearIntegrationBearerToken" class="form-check-input" />
+                <label asp-for="ClearIntegrationBearerToken" class="form-check-label"></label>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="AutoSyncEnabled" class="form-check-input" />
+                <label asp-for="AutoSyncEnabled" class="form-check-label"></label>
+            </div>
+
+            <div class="small text-muted">
+                Last updated by <strong>@Model.LastUpdatedBy</strong> on @Model.LastUpdatedUtc.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt")
+            </div>
+        </div>
+    </div>
+
+    <div class="page-actions d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save Configuration</button>
+        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

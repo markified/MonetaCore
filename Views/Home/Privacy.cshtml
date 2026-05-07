@@ -1,0 +1,105 @@
+﻿@{
+    ViewData["Title"] = "System Info";
+}
+
+<div class="solid-card mt-3 p-4">
+    <p class="eyebrow mb-1">MONETACORE PROFILE</p>
+    <h1 class="h3">MonetaCore: A Web-Based Billing, Invoicing, and Revenue Management System for Service-Based Enterprises</h1>
+    <p class="text-muted">MonetaCore is designed for service-based businesses, SMEs, and enterprises requiring centralized billing, invoicing, and revenue tracking operations.</p>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <h2 class="h6">Academic Context</h2>
+            <ul class="mb-0">
+                <li><strong>Subject:</strong> IT15/L Integrative Programming and Technologies</li>
+                <li><strong>Code:</strong> 8491</li>
+                <li><strong>Time:</strong> 7:30pm-9:30pm</li>
+                <li><strong>Topic:</strong> #12 Financial &amp; Billing Management Systems</li>
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h2 class="h6">Technology</h2>
+            <ul class="mb-0">
+                <li>ASP.NET Core (C#)</li>
+                <li>HTML, CSS, Bootstrap, JavaScript</li>
+                <li>Entity Framework Core + MySQL</li>
+                <li>PayMongo API and RESTful integrations</li>
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h2 class="h6">Security Features</h2>
+            <ul class="mb-0">
+                <li>Authentication and Authorization (RBAC)</li>
+                <li>Input Validation and Sanitization</li>
+                <li>HTTPS/SSL and Session Management</li>
+                <li>Logging and Audit Trail</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <h2 class="h6">Core Modules</h2>
+            <ul>
+                <li>Invoice Generation and Tracking</li>
+                <li>Payment Processing</li>
+                <li>Credit and Debit Management</li>
+                <li>Revenue Monitoring</li>
+                <li>Account Integration</li>
+                <li>System Configuration and Settings (Super Admin only)</li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h2 class="h6">Target Users</h2>
+            <ul>
+                <li>Billing Staff</li>
+                <li>Accountants and Finance Managers</li>
+                <li>System Administrators</li>
+                <li>Authorized Viewers / Auditors</li>
+                <li>Clients (External)</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2 class="h6 mt-3">Role-Based Access</h2>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Role</th>
+                    <th scope="col">Access Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Super Admin</td>
+                    <td>Full access to all modules, roles, permissions, settings, and audit/security reports.</td>
+                </tr>
+                <tr>
+                    <td>Main Admin</td>
+                    <td>Manage users and roles, configure settings, and access all core modules with audit logs.</td>
+                </tr>
+                <tr>
+                    <td>Finance Manager</td>
+                    <td>Oversee revenue analytics, approve credit/debit adjustments, and export financial reports.</td>
+                </tr>
+                <tr>
+                    <td>Billing Staff</td>
+                    <td>Create and send invoices, track payments, issue receipts, and record credit/debit adjustments.</td>
+                </tr>
+                <tr>
+                    <td>Accountant</td>
+                    <td>Reconcile payment transactions, manage external accounting sync, and generate compliance reports.</td>
+                </tr>
+                <tr>
+                    <td>Authorized Viewer / Auditor</td>
+                    <td>Read-only access to invoices, payments, revenue data, and audit trails.</td>
+                </tr>
+                <tr>
+                    <td>Client (External User)</td>
+                    <td>View own invoices and payment history, download PDFs/receipts, and submit payment inquiries.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

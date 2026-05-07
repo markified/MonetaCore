@@ -1,0 +1,196 @@
+@model Invoice
+@{
+    ViewData["Title"] = "Invoice Details";
+}
+
+<div class="page-head d-flex justify-content-between align-items-end gap-2 mt-3 mb-3">
+    <div>
+        <p class="eyebrow mb-1">INVOICE DETAIL</p>
+        <h1 class="h3 mb-0">@Model.InvoiceNumber</h1>
+        <p class="text-muted mb-0">@Model.ClientAccount?.CompanyName</p>
+    </div>
+    <div class="d-flex gap-2 page-actions">
+        <a asp-controller="Payments" asp-action="Create" asp-route-invoiceId="@Model.Id" class="btn btn-primary">Record Payment</a>
+        @if (User.IsInRole(ApplicationRoles.SuperAdmin) || User.IsInRole(ApplicationRoles.MainAdmin) || User.IsInRole(ApplicationRoles.Accountant) || User.IsInRole(ApplicationRoles.FinanceManager))
+        {
+            <a asp-controller="Adjustments" asp-action="Create" class="btn btn-outline-primary">Apply Credit/Debit</a>
+        }
+        @if (User.IsInRole(ApplicationRoles.SuperAdmin) || User.IsInRole(ApplicationRoles.MainAdmin) || User.IsInRole(ApplicationRoles.FinanceManager))
+        {
+            if (Model.Status != DomainValues.InvoiceStatus.Cancelled && Model.Status != DomainValues.InvoiceStatus.Paid)
+            {
+                <form asp-action="Cancel" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-outline-danger">Cancel Invoice</button>
+                </form>
+            }
+        }
+        <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-3 col-md-6"><article class="metric-card"><small>Total Amount</small><h3>@Model.TotalAmount.ToString("N2")</h3></article></div>
+    <div class="col-lg-3 col-md-6"><article class="metric-card"><small>Paid</small><h3>@Model.AmountPaid.ToString("N2")</h3></article></div>
+    <div class="col-lg-3 col-md-6"><article class="metric-card"><small>Balance</small><h3>@Model.BalanceDue.ToString("N2")</h3></article></div>
+    <div class="col-lg-3 col-md-6"><article class="metric-card"><small>Status</small><h3>@Model.Status</h3></article></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="solid-card p-4 h-100">
+            <h2 class="h5 mb-3">Line Items</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>@item.Description</td>
+                                <td>@item.Quantity.ToString("N2")</td>
+                                <td>@item.UnitPrice.ToString("N2")</td>
+                                <td>@item.LineTotal.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <hr />
+            <div class="small text-muted">Tax Rate: @(Model.TaxRate * 100)%</div>
+            <div class="small text-muted">Adjustment Total: @Model.AdjustmentTotal.ToString("N2")</div>
+            @if (!string.IsNullOrWhiteSpace(Model.Notes))
+            {
+                <p class="mt-3 mb-0">@Model.Notes</p>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="solid-card p-4 mb-3">
+            <h2 class="h5 mb-3">Payments</h2>
+            @if (Model.Payments.Count == 0)
+            {
+                <p class="text-muted mb-0">No payments recorded.</p>
+            }
+            else
+            {
+                var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+                <ul class="list-unstyled mb-0">
+                @foreach (var payment in Model.Payments.OrderByDescending(x => x.PaidAtUtc))
+                {
+                    <li class="py-2 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                            <div>
+                                <strong>@payment.Amount.ToString("N2")</strong> via @payment.Method
+                                <div class="small text-muted">@payment.PaidAtUtc.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt")</div>
+                                <div class="small text-muted">Status: @payment.Status</div>
+                                <div class="small text-muted">Ref: @payment.ReferenceNumber</div>
+                            </div>
+                            @if (payment.Method == DomainValues.PaymentMethod.PayMongo
+                               && payment.Status == DomainValues.PaymentStatus.Pending)
+                            {
+                                <form asp-controller="Payments" asp-action="ConfirmPayMongo" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@payment.Id" />
+                                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary js-confirm-paymongo"
+                                            data-payment-label="@($"Confirm PayMongo payment of {payment.Amount:N2} for invoice {Model.InvoiceNumber}")">
+                                        Confirm
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </li>
+
+                    <div class="modal fade" id="confirmPaymongoModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirm PayMongo Payment</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="mb-2" data-confirm-label>Are you sure you want to confirm this PayMongo payment?</p>
+                                    <p class="small text-muted mb-0">This will mark the payment as completed and update the invoice balance.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="confirmPaymongoSubmit">Confirm Payment</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                </ul>
+            }
+        </div>
+
+        <div class="solid-card p-4">
+    <script>
+        (() => {
+            const modalElement = document.getElementById("confirmPaymongoModal");
+            const confirmButton = document.getElementById("confirmPaymongoSubmit");
+            if (!modalElement || !confirmButton || !window.bootstrap) {
+                return;
+            }
+
+            if (modalElement.parentElement !== document.body) {
+                document.body.appendChild(modalElement);
+            }
+
+            const label = modalElement.querySelector("[data-confirm-label]");
+            const modal = new bootstrap.Modal(modalElement);
+            let pendingForm = null;
+
+            document.querySelectorAll(".js-confirm-paymongo").forEach((button) => {
+                button.addEventListener("click", () => {
+                    pendingForm = button.closest("form");
+                    const text = button.getAttribute("data-payment-label");
+                    if (label && text) {
+                        label.textContent = text;
+                    }
+                    modal.show();
+                });
+            });
+
+            confirmButton.addEventListener("click", () => {
+                if (pendingForm) {
+                    pendingForm.submit();
+                }
+            });
+        })();
+    </script>
+            <h2 class="h5 mb-3">Adjustments</h2>
+            @if (Model.Adjustments.Count == 0)
+            {
+                <p class="text-muted mb-0">No credit/debit adjustments.</p>
+            }
+            else
+            {
+                <ul class="list-unstyled mb-0">
+                @foreach (var adjustment in Model.Adjustments.OrderByDescending(x => x.AppliedAtUtc))
+                {
+                    <li class="py-2 border-bottom">
+                        <strong>@adjustment.Type</strong> - @adjustment.Amount.ToString("N2")
+                        @if (!string.IsNullOrWhiteSpace(adjustment.Reason))
+                        {
+                            <div class="small text-muted">@adjustment.Reason</div>
+                        }
+                        <div class="small text-muted">@adjustment.AppliedAtUtc.ToLocalTime().ToString("MMM dd, yyyy")</div>
+                    </li>
+                }
+                </ul>
+            }
+        </div>
+    </div>
+</div>

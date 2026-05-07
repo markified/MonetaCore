@@ -1,0 +1,54 @@
+@model IReadOnlyList<ClientAccount>
+@{
+    ViewData["Title"] = "Clients";
+}
+
+<div class="page-head page-head--ruled d-flex justify-content-between align-items-end gap-2 mt-3">
+    <div>
+        <p class="eyebrow mb-1">ACCOUNT INTEGRATION BASE</p>
+        <h1 class="h3 mb-0">Client Accounts</h1>
+    </div>
+    <div class="page-actions">
+        <a asp-action="Create" class="btn btn-primary">Add Client</a>
+    </div>
+</div>
+
+<div class="solid-card p-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle moneta-table moneta-table--id">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Contact Person</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr class="empty-state-row"><td colspan="6"><div class="empty-state"><div class="empty-state-icon">🏢</div><h3>No clients yet</h3><p>Add your first client account to start invoicing.</p></div></td></tr>
+            }
+            else
+            {
+                @foreach (var client in Model)
+                {
+                    <tr>
+                        <td>@client.CompanyName</td>
+                        <td>@client.ContactPerson</td>
+                        <td>@client.Email</td>
+                        <td>@client.Phone</td>
+                        <td>@client.Address</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@client.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@client.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

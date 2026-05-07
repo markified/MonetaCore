@@ -1,0 +1,310 @@
+@model IntegrationsIndexViewModel
+@{
+    ViewData["Title"] = "Account Integration";
+}
+
+<div class="page-head d-flex justify-content-between align-items-end gap-2 mt-3 mb-3">
+    <div>
+        <p class="eyebrow mb-1">ACCOUNT INTEGRATION</p>
+        <h1 class="h3 mb-0">External Accounting Sync</h1>
+        <p class="text-muted mb-0 small">Accounting Endpoint: @Model.AccountingApiEndpoint</p>
+        <p class="text-muted mb-0 small">Outbox Endpoint: @Model.OutboxEventsEndpoint</p>
+        <p class="text-muted mb-0 small">Auth Mode: @Model.IntegrationAuthMode</p>
+    </div>
+    <div class="page-actions">
+        <form asp-action="SyncInvoices" method="post" class="m-0">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="eventType" value="@Model.EventTypeFilter" />
+            <input type="hidden" name="eventSearch" value="@Model.EventSearchFilter" />
+            <input type="hidden" name="eventPage" value="@Model.EventPage" />
+            <input type="hidden" name="eventPageSize" value="@Model.EventPageSize" />
+            <input type="hidden" name="deadLetterEventType" value="@Model.DeadLetterEventTypeFilter" />
+            <input type="hidden" name="deadLetterSearch" value="@Model.DeadLetterSearchFilter" />
+            <input type="hidden" name="deadLetterPage" value="@Model.DeadLetterPage" />
+            <input type="hidden" name="deadLetterPageSize" value="@Model.DeadLetterPageSize" />
+            <button type="submit" class="btn btn-primary">Sync Latest Invoices</button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="metric-card h-100">
+            <small>Outbox Pending</small>
+            <h3>@Model.PendingOutboxCount</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="metric-card h-100">
+            <small>Outbox Failed</small>
+            <h3>@Model.FailedOutboxCount</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="metric-card h-100">
+            <small>Outbox Dispatched</small>
+            <h3>@Model.DispatchedOutboxCount</h3>
+        </div>
+    </div>
+</div>
+
+<div class="solid-card p-4">
+    <h2 class="h5 mb-3">Recent Sync Events</h2>
+
+    <form asp-action="Index" method="get" class="row g-2 mb-3">
+        <div class="col-md-3">
+            <label class="form-label mb-1">Provider/Status</label>
+            <input type="text" name="eventType" class="form-control" value="@Model.EventTypeFilter" placeholder="ExternalAccounting, Success" />
+        </div>
+        <div class="col-md-5">
+            <label class="form-label mb-1">Search</label>
+            <input type="text" name="eventSearch" class="form-control" value="@Model.EventSearchFilter" placeholder="Message or Correlation ID" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label mb-1">Page Size</label>
+            <select name="eventPageSize" class="form-select">
+                <option value="10" selected="@(Model.EventPageSize == 10 ? "selected" : null)">10</option>
+                <option value="20" selected="@(Model.EventPageSize == 20 ? "selected" : null)">20</option>
+                <option value="50" selected="@(Model.EventPageSize == 50 ? "selected" : null)">50</option>
+                <option value="100" selected="@(Model.EventPageSize == 100 ? "selected" : null)">100</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <a asp-action="Index"
+               asp-route-deadLetterEventType="@Model.DeadLetterEventTypeFilter"
+               asp-route-deadLetterSearch="@Model.DeadLetterSearchFilter"
+               asp-route-deadLetterPage="@Model.DeadLetterPage"
+               asp-route-deadLetterPageSize="@Model.DeadLetterPageSize"
+               class="btn btn-outline-secondary">Clear</a>
+        </div>
+    </form>
+
+    <div class="mb-2 text-muted small">
+        Showing @Model.RecentEvents.Count of @Model.EventTotalCount integration events.
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Provider</th>
+                    <th>Direction</th>
+                    <th>Status</th>
+                    <th>Correlation ID</th>
+                    <th>Message</th>
+                    <th>Triggered By</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.RecentEvents.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">No sync events yet.</td></tr>
+            }
+            else
+            {
+                @foreach (var item in Model.RecentEvents)
+                {
+                    <tr>
+                        <td>@item.SyncedAtUtc.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</td>
+                        <td>@item.Provider</td>
+                        <td>@item.Direction</td>
+                        <td><span class="badge-status @item.Status.ToLowerInvariant()">@item.Status</span></td>
+                        <td>
+                            @if (string.IsNullOrWhiteSpace(item.CorrelationId))
+                            {
+                                <span>-</span>
+                            }
+                            else
+                            {
+                                <span class="correlation-value" title="@item.CorrelationId">
+                                    @(item.CorrelationId.Length > 26 ? $"{item.CorrelationId[..26]}..." : item.CorrelationId)
+                                </span>
+                            }
+                        </td>
+                        <td>@item.Message</td>
+                        <td>@(item.TriggeredByUser?.FullName ?? "System")</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.EventTotalPages > 1)
+    {
+        <nav aria-label="Event pages" class="mt-3">
+            <ul class="pagination mb-0">
+                <li class="page-item @(Model.EventPage <= 1 ? "disabled" : string.Empty)">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-eventType="@Model.EventTypeFilter"
+                       asp-route-eventSearch="@Model.EventSearchFilter"
+                       asp-route-eventPage="@(Model.EventPage - 1)"
+                       asp-route-eventPageSize="@Model.EventPageSize"
+                       asp-route-deadLetterEventType="@Model.DeadLetterEventTypeFilter"
+                       asp-route-deadLetterSearch="@Model.DeadLetterSearchFilter"
+                       asp-route-deadLetterPage="@Model.DeadLetterPage"
+                       asp-route-deadLetterPageSize="@Model.DeadLetterPageSize">Previous</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">Page @Model.EventPage of @Model.EventTotalPages</span>
+                </li>
+                <li class="page-item @(Model.EventPage >= Model.EventTotalPages ? "disabled" : string.Empty)">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-eventType="@Model.EventTypeFilter"
+                       asp-route-eventSearch="@Model.EventSearchFilter"
+                       asp-route-eventPage="@(Model.EventPage + 1)"
+                       asp-route-eventPageSize="@Model.EventPageSize"
+                       asp-route-deadLetterEventType="@Model.DeadLetterEventTypeFilter"
+                       asp-route-deadLetterSearch="@Model.DeadLetterSearchFilter"
+                       asp-route-deadLetterPage="@Model.DeadLetterPage"
+                       asp-route-deadLetterPageSize="@Model.DeadLetterPageSize">Next</a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+<div class="solid-card p-4 mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Outbox Dead Letters</h2>
+        <form asp-action="ReplayAllDeadLetters" method="post" class="m-0">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="eventType" value="@Model.EventTypeFilter" />
+            <input type="hidden" name="eventSearch" value="@Model.EventSearchFilter" />
+            <input type="hidden" name="eventPage" value="@Model.EventPage" />
+            <input type="hidden" name="eventPageSize" value="@Model.EventPageSize" />
+            <input type="hidden" name="deadLetterEventType" value="@Model.DeadLetterEventTypeFilter" />
+            <input type="hidden" name="deadLetterSearch" value="@Model.DeadLetterSearchFilter" />
+            <input type="hidden" name="deadLetterPage" value="@Model.DeadLetterPage" />
+            <input type="hidden" name="deadLetterPageSize" value="@Model.DeadLetterPageSize" />
+            <button type="submit" class="btn btn-outline-primary">Replay All Failed</button>
+        </form>
+    </div>
+
+    <form asp-action="Index" method="get" class="row g-2 mb-3">
+        <input type="hidden" name="eventType" value="@Model.EventTypeFilter" />
+        <input type="hidden" name="eventSearch" value="@Model.EventSearchFilter" />
+        <input type="hidden" name="eventPage" value="@Model.EventPage" />
+        <input type="hidden" name="eventPageSize" value="@Model.EventPageSize" />
+        <div class="col-md-3">
+            <label class="form-label mb-1">Event Type</label>
+            <input type="text" name="deadLetterEventType" class="form-control" value="@Model.DeadLetterEventTypeFilter" placeholder="InvoiceCreated" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label mb-1">Search</label>
+            <input type="text" name="deadLetterSearch" class="form-control" value="@Model.DeadLetterSearchFilter" placeholder="Event Id, Producer, Error, Correlation" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label mb-1">Page Size</label>
+            <select name="deadLetterPageSize" class="form-select">
+                <option value="10" selected="@(Model.DeadLetterPageSize == 10 ? "selected" : null)">10</option>
+                <option value="20" selected="@(Model.DeadLetterPageSize == 20 ? "selected" : null)">20</option>
+                <option value="50" selected="@(Model.DeadLetterPageSize == 50 ? "selected" : null)">50</option>
+                <option value="100" selected="@(Model.DeadLetterPageSize == 100 ? "selected" : null)">100</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+            <a asp-action="Index"
+               asp-route-eventType="@Model.EventTypeFilter"
+               asp-route-eventSearch="@Model.EventSearchFilter"
+               asp-route-eventPage="@Model.EventPage"
+               asp-route-eventPageSize="@Model.EventPageSize"
+               class="btn btn-outline-secondary">Clear</a>
+        </div>
+    </form>
+
+    <div class="mb-2 text-muted small">
+        Showing @Model.DeadLetters.Count of @Model.DeadLetterTotalCount failed messages.
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Created</th>
+                    <th>Event Type</th>
+                    <th>Correlation ID</th>
+                    <th>Attempts</th>
+                    <th>Last Error</th>
+                    <th>Last Attempt</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.DeadLetters.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">No dead-letter outbox messages.</td></tr>
+            }
+            else
+            {
+                @foreach (var item in Model.DeadLetters)
+                {
+                    <tr>
+                        <td>@item.CreatedAtUtc.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</td>
+                        <td>@item.EventType</td>
+                        <td class="text-break">@(string.IsNullOrWhiteSpace(item.CorrelationId) ? "-" : item.CorrelationId)</td>
+                        <td>@item.AttemptCount</td>
+                        <td>@item.LastError</td>
+                        <td>@(item.LastAttemptedAtUtc.HasValue ? item.LastAttemptedAtUtc.Value.ToLocalTime().ToString("MMM dd, yyyy HH:mm") : "-")</td>
+                        <td>
+                            <form asp-action="ReplayDeadLetter" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <input type="hidden" name="eventType" value="@Model.EventTypeFilter" />
+                                <input type="hidden" name="eventSearch" value="@Model.EventSearchFilter" />
+                                <input type="hidden" name="eventPage" value="@Model.EventPage" />
+                                <input type="hidden" name="eventPageSize" value="@Model.EventPageSize" />
+                                <input type="hidden" name="deadLetterEventType" value="@Model.DeadLetterEventTypeFilter" />
+                                <input type="hidden" name="deadLetterSearch" value="@Model.DeadLetterSearchFilter" />
+                                <input type="hidden" name="deadLetterPage" value="@Model.DeadLetterPage" />
+                                <input type="hidden" name="deadLetterPageSize" value="@Model.DeadLetterPageSize" />
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Replay</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.DeadLetterTotalPages > 1)
+    {
+        <nav aria-label="Dead letter pages">
+            <ul class="pagination mb-0">
+                <li class="page-item @(Model.DeadLetterPage <= 1 ? "disabled" : string.Empty)">
+                    <a class="page-link"
+                       asp-action="Index"
+                              asp-route-eventType="@Model.EventTypeFilter"
+                              asp-route-eventSearch="@Model.EventSearchFilter"
+                              asp-route-eventPage="@Model.EventPage"
+                              asp-route-eventPageSize="@Model.EventPageSize"
+                       asp-route-deadLetterEventType="@Model.DeadLetterEventTypeFilter"
+                       asp-route-deadLetterSearch="@Model.DeadLetterSearchFilter"
+                       asp-route-deadLetterPage="@(Model.DeadLetterPage - 1)"
+                       asp-route-deadLetterPageSize="@Model.DeadLetterPageSize">Previous</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">Page @Model.DeadLetterPage of @Model.DeadLetterTotalPages</span>
+                </li>
+                <li class="page-item @(Model.DeadLetterPage >= Model.DeadLetterTotalPages ? "disabled" : string.Empty)">
+                    <a class="page-link"
+                       asp-action="Index"
+                              asp-route-eventType="@Model.EventTypeFilter"
+                              asp-route-eventSearch="@Model.EventSearchFilter"
+                              asp-route-eventPage="@Model.EventPage"
+                              asp-route-eventPageSize="@Model.EventPageSize"
+                       asp-route-deadLetterEventType="@Model.DeadLetterEventTypeFilter"
+                       asp-route-deadLetterSearch="@Model.DeadLetterSearchFilter"
+                       asp-route-deadLetterPage="@(Model.DeadLetterPage + 1)"
+                       asp-route-deadLetterPageSize="@Model.DeadLetterPageSize">Next</a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>

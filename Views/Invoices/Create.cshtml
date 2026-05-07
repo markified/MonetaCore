@@ -1,0 +1,78 @@
+@model InvoiceCreateViewModel
+@{
+    ViewData["Title"] = "Create Invoice";
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-xl-10">
+        <div class="solid-card p-4">
+            <h1 class="h4 mb-3">Create Invoice</h1>
+            <form asp-action="Create" method="post" id="invoiceForm" novalidate>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label asp-for="ClientAccountId" class="form-label">Client</label>
+                        <select asp-for="ClientAccountId" asp-items="ViewBag.Clients" class="form-select">
+                            <option value="">Select client</option>
+                        </select>
+                        <span asp-validation-for="ClientAccountId" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="DueDateUtc" class="form-label"></label>
+                        <input asp-for="DueDateUtc" type="date" class="form-control" />
+                        <span asp-validation-for="DueDateUtc" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="TaxRate" class="form-label">Tax Rate (0 to 1)</label>
+                        <input asp-for="TaxRate" class="form-control" />
+                        <span asp-validation-for="TaxRate" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Notes" class="form-label"></label>
+                        <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="h6 mb-0">Line Items</h2>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="addItemRow">Add Item</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table" id="invoiceItemTable">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th style="width: 140px;">Quantity</th>
+                                <th style="width: 180px;">Unit Price</th>
+                                <th style="width: 80px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Items.Count; i++)
+                            {
+                                <tr>
+                                    <td><input asp-for="Items[i].Description" class="form-control" /></td>
+                                    <td><input asp-for="Items[i].Quantity" class="form-control" /></td>
+                                    <td><input asp-for="Items[i].UnitPrice" class="form-control" /></td>
+                                    <td><button type="button" class="btn btn-sm btn-outline-danger remove-row" aria-label="Remove line item">Remove</button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-3 d-flex gap-2 page-actions">
+                    <button type="submit" class="btn btn-primary">Save Invoice</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

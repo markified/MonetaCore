@@ -1,0 +1,148 @@
+@model PaymentCreateViewModel
+@{
+    ViewData["Title"] = "Record Payment";
+    bool showPayMongoTransaction = string.Equals(Model?.Method, DomainValues.PaymentMethod.PayMongo, StringComparison.OrdinalIgnoreCase);
+    bool showPayMongoCardFields = showPayMongoTransaction
+        && string.Equals(Model?.PayMongoFlow, DomainValues.PayMongoFlow.Card, StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-8">
+        <div class="solid-card p-4">
+            <h1 class="h4 mb-3">Record Payment</h1>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <div class="fw-semibold mb-1">We could not save the payment.</div>
+                    <div asp-validation-summary="All" class="mb-0"></div>
+                </div>
+            }
+
+            <form asp-action="Create" method="post" novalidate>
+                @Html.AntiForgeryToken()
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="InvoiceId" class="form-label">Invoice</label>
+                        <select asp-for="InvoiceId" asp-items="ViewBag.Invoices" class="form-select">
+                            <option value="">Select invoice</option>
+                        </select>
+                        <span asp-validation-for="InvoiceId" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Amount" class="form-label"></label>
+                        <input asp-for="Amount" class="form-control" />
+                        <span asp-validation-for="Amount" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Method" class="form-label"></label>
+                        <select asp-for="Method" asp-items="ViewBag.Methods" class="form-select">
+                            <option value="">Select method</option>
+                        </select>
+                        <span asp-validation-for="Method" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12 @(showPayMongoTransaction ? string.Empty : "d-none")" id="paymongoOptions">
+                        <label class="form-label">PayMongo Transaction Details</label>
+                        <hr class="mt-0" />
+                        <label class="form-label">PayMongo Flow</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="form-check">
+                                <input asp-for="PayMongoFlow" class="form-check-input" type="radio" value="@DomainValues.PayMongoFlow.Checkout" id="paymongoFlowCheckout" />
+                                <label class="form-check-label" for="paymongoFlowCheckout">Checkout (redirect)</label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="PayMongoFlow" class="form-check-input" type="radio" value="@DomainValues.PayMongoFlow.Card" id="paymongoFlowCard" />
+                                <label class="form-check-label" for="paymongoFlowCard">Card (on-site)</label>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-1">Checkout redirects to PayMongo. Card flow uses sandbox test details.</div>
+                    </div>
+                    <div class="col-12 @(showPayMongoCardFields ? string.Empty : "d-none")" id="paymongoCardFields">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="CardholderName" class="form-label"></label>
+                                <input asp-for="CardholderName" class="form-control" placeholder="Full name" />
+                                <span asp-validation-for="CardholderName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CardNumber" class="form-label"></label>
+                                <input asp-for="CardNumber" class="form-control" placeholder="4242 4242 4242 4242" />
+                                <span asp-validation-for="CardNumber" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="CardExpMonth" class="form-label"></label>
+                                <input asp-for="CardExpMonth" class="form-control" placeholder="MM" />
+                                <span asp-validation-for="CardExpMonth" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="CardExpYear" class="form-label"></label>
+                                <input asp-for="CardExpYear" class="form-control" placeholder="YYYY" />
+                                <span asp-validation-for="CardExpYear" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="CardCvc" class="form-label"></label>
+                                <input asp-for="CardCvc" class="form-control" placeholder="CVC" />
+                                <span asp-validation-for="CardCvc" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ReferenceNumber" class="form-label"></label>
+                        <input asp-for="ReferenceNumber" class="form-control" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Notes" class="form-label"></label>
+                        <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2 page-actions">
+                    <button type="submit" class="btn btn-primary">Save Payment</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const methodSelect = document.getElementById("Method");
+            const paymongoOptions = document.getElementById("paymongoOptions");
+            const paymongoCardFields = document.getElementById("paymongoCardFields");
+
+            if (!methodSelect || !paymongoOptions || !paymongoCardFields) {
+                return;
+            }
+
+            const updateCardFields = () => {
+                const selectedFlow = document.querySelector("input[name='PayMongoFlow']:checked");
+                if (selectedFlow && selectedFlow.value === "@DomainValues.PayMongoFlow.Card") {
+                    paymongoCardFields.classList.remove("d-none");
+                } else {
+                    paymongoCardFields.classList.add("d-none");
+                }
+            };
+
+            const updatePayMongoVisibility = () => {
+                if (methodSelect.value === "@DomainValues.PaymentMethod.PayMongo") {
+                    paymongoOptions.classList.remove("d-none");
+                    updateCardFields();
+                } else {
+                    paymongoOptions.classList.add("d-none");
+                    paymongoCardFields.classList.add("d-none");
+                }
+            };
+
+            methodSelect.addEventListener("change", updatePayMongoVisibility);
+            document.querySelectorAll("input[name='PayMongoFlow']").forEach((input) => {
+                input.addEventListener("change", updateCardFields);
+            });
+
+            updatePayMongoVisibility();
+        })();
+    </script>
+}

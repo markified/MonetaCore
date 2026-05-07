@@ -1,0 +1,160 @@
+@model InvoiceIndexViewModel
+@{
+    ViewData["Title"] = "Invoices";
+
+    int openCount = Model.DraftCount + Model.IssuedCount + Model.PartiallyPaidCount;
+}
+
+<div class="page-head page-head--ruled d-flex justify-content-between align-items-end gap-2 mt-3">
+    <div>
+        <p class="eyebrow mb-1">INVOICE GENERATION & TRACKING</p>
+        <h1 class="h3 mb-0">Invoice Register</h1>
+    </div>
+    @if (User.IsInRole(ApplicationRoles.SuperAdmin) || User.IsInRole(ApplicationRoles.MainAdmin) || User.IsInRole(ApplicationRoles.BillingStaff) || User.IsInRole(ApplicationRoles.FinanceManager))
+    {
+        <div class="page-actions">
+            <a asp-action="Create" class="btn btn-primary">Create Invoice</a>
+        </div>
+    }
+</div>
+
+<div class="row g-3 mb-4 invoice-register-kpis">
+    <div class="col-md-3 col-6">
+        <article class="metric-card h-100">
+            <small>Total Invoices</small>
+            <h3>@Model.TotalCount</h3>
+        </article>
+    </div>
+    <div class="col-md-3 col-6">
+        <article class="metric-card h-100">
+            <small>Open</small>
+            <h3>@openCount</h3>
+        </article>
+    </div>
+    <div class="col-md-3 col-6">
+        <article class="metric-card h-100">
+            <small>Paid</small>
+            <h3>@Model.PaidCount</h3>
+        </article>
+    </div>
+    <div class="col-md-3 col-6">
+        <article class="metric-card h-100">
+            <small>Overdue</small>
+            <h3>@Model.OverdueCount</h3>
+        </article>
+    </div>
+</div>
+
+<div class="solid-card p-4">
+    <form asp-action="Index" method="get" class="row g-2 mb-3 invoice-filter-row">
+        <div class="col-md-5">
+            <label class="form-label mb-1">Search</label>
+            <input type="text"
+                   name="search"
+                   class="form-control"
+                   value="@Model.Search"
+                   placeholder="Invoice number, client, or status" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label mb-1">Status</label>
+            <select name="status" class="form-select">
+                <option value="" selected="@(string.IsNullOrWhiteSpace(Model.Status) ? "selected" : null)">All</option>
+                <option value="@DomainValues.InvoiceStatus.Draft" selected="@(Model.Status == DomainValues.InvoiceStatus.Draft ? "selected" : null)">Draft</option>
+                <option value="@DomainValues.InvoiceStatus.Issued" selected="@(Model.Status == DomainValues.InvoiceStatus.Issued ? "selected" : null)">Issued</option>
+                <option value="@DomainValues.InvoiceStatus.PartiallyPaid" selected="@(Model.Status == DomainValues.InvoiceStatus.PartiallyPaid ? "selected" : null)">Partially Paid</option>
+                <option value="@DomainValues.InvoiceStatus.Paid" selected="@(Model.Status == DomainValues.InvoiceStatus.Paid ? "selected" : null)">Paid</option>
+                <option value="@DomainValues.InvoiceStatus.Overdue" selected="@(Model.Status == DomainValues.InvoiceStatus.Overdue ? "selected" : null)">Overdue</option>
+                <option value="@DomainValues.InvoiceStatus.Cancelled" selected="@(Model.Status == DomainValues.InvoiceStatus.Cancelled ? "selected" : null)">Cancelled</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label mb-1">Page Size</label>
+            <select name="pageSize" class="form-select">
+                <option value="10" selected="@(Model.PageSize == 10 ? "selected" : null)">10</option>
+                <option value="20" selected="@(Model.PageSize == 20 ? "selected" : null)">20</option>
+                <option value="50" selected="@(Model.PageSize == 50 ? "selected" : null)">50</option>
+                <option value="100" selected="@(Model.PageSize == 100 ? "selected" : null)">100</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+        </div>
+    </form>
+
+    <div class="mb-2 text-muted small">
+        Showing @Model.Invoices.Count of @Model.TotalCount invoices.
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle moneta-table moneta-table--id">
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Client</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Total</th>
+                    <th>Balance</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Invoices.Count == 0)
+            {
+                <tr class="empty-state-row"><td colspan="8"><div class="empty-state"><div class="empty-state-icon">📄</div><h3>No invoices yet</h3><p>Create your first invoice to get started.</p></div></td></tr>
+            }
+            else
+            {
+                @foreach (var invoice in Model.Invoices)
+                {
+                    <tr>
+                        <td>@invoice.InvoiceNumber</td>
+                        <td>@invoice.ClientAccount?.CompanyName</td>
+                        <td>@invoice.IssueDateUtc.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                        <td>@invoice.DueDateUtc.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                        <td>@invoice.TotalAmount.ToString("N2")</td>
+                        <td>@invoice.BalanceDue.ToString("N2")</td>
+                        <td>
+                            <span class="badge-status @invoice.Status.ToLowerInvariant()">
+                                @(invoice.Status == DomainValues.InvoiceStatus.PartiallyPaid ? "Partially Paid" : invoice.Status)
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@invoice.Id" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Invoice pages" class="mt-3">
+            <ul class="pagination mb-0">
+                <li class="page-item @(Model.Page <= 1 ? "disabled" : string.Empty)">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-search="@Model.Search"
+                       asp-route-status="@Model.Status"
+                       asp-route-page="@(Model.Page - 1)"
+                       asp-route-pageSize="@Model.PageSize">Previous</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">Page @Model.Page of @Model.TotalPages</span>
+                </li>
+                <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : string.Empty)">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-search="@Model.Search"
+                       asp-route-status="@Model.Status"
+                       asp-route-page="@(Model.Page + 1)"
+                       asp-route-pageSize="@Model.PageSize">Next</a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>

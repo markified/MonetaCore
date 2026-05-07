@@ -1,0 +1,52 @@
+@model AdjustmentCreateViewModel
+@{
+    ViewData["Title"] = "Apply Adjustment";
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-8">
+        <div class="solid-card p-4">
+            <h1 class="h4 mb-3">Apply Credit / Debit</h1>
+            <form asp-action="Create" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="InvoiceId" class="form-label">Invoice</label>
+                        <select asp-for="InvoiceId" asp-items="ViewBag.Invoices" class="form-select">
+                            <option value="">Select invoice</option>
+                        </select>
+                        <span asp-validation-for="InvoiceId" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Type" class="form-label"></label>
+                        <select asp-for="Type" asp-items="ViewBag.Types" class="form-select">
+                            <option value="">Select type</option>
+                        </select>
+                        <span asp-validation-for="Type" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Amount" class="form-label"></label>
+                        <input asp-for="Amount" class="form-control" />
+                        <span asp-validation-for="Amount" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Reason" class="form-label"></label>
+                        <textarea asp-for="Reason" rows="3" class="form-control"></textarea>
+                        <span asp-validation-for="Reason" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2 page-actions">
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

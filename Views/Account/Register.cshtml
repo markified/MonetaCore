@@ -1,0 +1,83 @@
+@using MonetaCore.Models
+@model SignUpViewModel
+@{
+    ViewData["Title"] = "Sign Up";
+}
+
+<div class="row justify-content-center align-items-center min-vh-75 py-4">
+    <div class="col-xl-6 col-lg-7 col-md-9">
+        <div class="mb-3 d-flex justify-content-between gap-2 flex-wrap">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                &larr; Back to Home
+            </a>
+            <a asp-action="Login" class="btn btn-sm btn-outline-light">Already have an account?</a>
+        </div>
+
+        <div class="glass-card p-4 p-md-5">
+            <div class="mb-4">
+                <img src="~/images/monetacore_logo.svg" alt="MonetaCore Logo" class="brand-full-logo" />
+            </div>
+
+            <p class="eyebrow">CLIENT PORTAL SIGN UP</p>
+            <h1 class="hero-title mb-3">Request secure access to MonetaCore.</h1>
+            <p class="text-muted mb-4">Create a client portal account request. Access stays pending until an administrator reviews and approves your registration.</p>
+
+            <form asp-action="Register" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <input asp-for="Role" type="hidden" value="@ApplicationRoles.Client" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FullName" class="form-label"></label>
+                        <input asp-for="FullName" class="form-control form-control-lg" placeholder="Full name" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="CompanyName" class="form-label"></label>
+                        <input asp-for="CompanyName" class="form-control form-control-lg" placeholder="Company name" />
+                        <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control form-control-lg" placeholder="name@company.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Phone" class="form-label"></label>
+                        <input asp-for="Phone" class="form-control form-control-lg" placeholder="Phone number" />
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control form-control-lg" placeholder="Create a password" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <input asp-for="ConfirmPassword" class="form-control form-control-lg" placeholder="Confirm your password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Address" class="form-label"></label>
+                        <textarea asp-for="Address" class="form-control" rows="3" placeholder="Business address"></textarea>
+                        <span asp-validation-for="Address" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">Submit sign-up request</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
