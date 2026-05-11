@@ -160,8 +160,9 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 var app = builder.Build();
 
-using (IServiceScope scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
+    using IServiceScope scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
     await SeedData.InitializeAsync(dbContext, passwordService);
