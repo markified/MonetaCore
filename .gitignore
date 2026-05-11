@@ -5,3 +5,6 @@ publish-web/
 .vs/
 *.user
 *.suo
+appsettings.Local.json
+App_Data/system-configuration.json
+App_Data/system-configuration.local.json

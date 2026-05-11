@@ -1,0 +1,138 @@
+@using MonetaCore.Models
+@using MonetaCore.Security
+@model MonetaCore.ViewModels.ManageUsersViewModel
+@{
+    ViewData["Title"] = "Manage Users";
+    bool isSuperAdmin = Model.IsSuperAdmin;
+
+    string[] availableRoles = isSuperAdmin
+        ? ApplicationRoles.AllRoles
+        : ApplicationRoles.AllRoles
+            .Where(r => r != ApplicationRoles.SuperAdmin && r != ApplicationRoles.MainAdmin)
+            .ToArray();
+}
+
+<div class="page-head page-head--ruled mb-4">
+    <div>
+        <p class="eyebrow mb-2">User Management</p>
+        <h1 class="hero-title mb-1">Manage Users</h1>
+        <p class="text-muted mb-0">
+            @if (isSuperAdmin)
+            {
+                <span>All system users. Super Admin has full access.</span>
+            }
+            else
+            {
+                <span>Showing non-admin users. Admin and Super Admin accounts are not visible to Main Admin.</span>
+            }
+        </p>
+    </div>
+</div>
+
+<div class="solid-card p-3 mb-4">
+    <form method="get" asp-action="ManageUsers" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Search</label>
+            <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Name or email…" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Role</label>
+            <select name="role" class="form-select">
+                <option value="">All roles</option>
+                @foreach (var r in availableRoles)
+                {
+                    <option value="@r" selected="@(Model.RoleFilter == r)">@r</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a asp-action="ManageUsers" class="btn btn-outline-secondary ms-1">Clear</a>
+        </div>
+    </form>
+</div>
+
+@if (Model.Users.Count == 0)
+{
+    <div class="glass-card p-4 p-md-5 text-center">
+        <h2 class="h4 mb-2">No users found</h2>
+        <p class="text-muted mb-0">Try adjusting your filter or search term.</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 moneta-table moneta-table--id">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model.Users)
+                {
+                    bool isSelf = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == user.Id.ToString();
+                    bool canToggle = !isSelf;
+                    bool canDelete = isSuperAdmin && !isSelf;
+
+                    <tr>
+                        <td>@user.Id</td>
+                        <td>
+                            <div class="fw-semibold">@user.FullName</div>
+                            @if (isSelf)
+                            {
+                                <div class="small text-muted">(you)</div>
+                            }
+                        </td>
+                        <td>@user.Email</td>
+                        <td><span class="badge-status @user.Role.ToLowerInvariant()">@user.Role</span></td>
+                        <td>
+                            @if (user.IsActive)
+                            {
+                                <span class="badge-status paid">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status cancelled">Inactive</span>
+                            }
+                        </td>
+                        <td class="text-muted small">@user.CreatedAtUtc.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                        <td>
+                            <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                <a asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+
+                                @if (canToggle)
+                                {
+                                    <form asp-action="ToggleUserActive" method="post" class="m-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <button type="submit" class="btn btn-sm @(user.IsActive ? "btn-outline-secondary" : "btn-outline-primary")">
+                                            @(user.IsActive ? "Deactivate" : "Activate")
+                                        </button>
+                                    </form>
+                                }
+
+                                @if (canDelete)
+                                {
+                                    <form asp-action="DeleteUser" method="post" class="m-0"
+                                          onsubmit="return confirm('Permanently delete @user.FullName? This cannot be undone.')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="small text-muted mt-2">Showing @Model.Users.Count user(s).</p>
+}

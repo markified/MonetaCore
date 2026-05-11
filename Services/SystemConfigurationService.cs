@@ -17,13 +17,15 @@ public class SystemConfigurationService : ISystemConfigurationService
     };
 
     private readonly string _settingsPath;
+    private readonly string _legacySettingsPath;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
     public SystemConfigurationService(IWebHostEnvironment environment)
     {
         string appDataDirectory = Path.Combine(environment.ContentRootPath, "App_Data");
         Directory.CreateDirectory(appDataDirectory);
-        _settingsPath = Path.Combine(appDataDirectory, "system-configuration.json");
+        _settingsPath = Path.Combine(appDataDirectory, "system-configuration.local.json");
+        _legacySettingsPath = Path.Combine(appDataDirectory, "system-configuration.json");
     }
 
     public async Task<SystemConfigurationSettings> GetAsync(CancellationToken cancellationToken = default)
@@ -33,6 +35,15 @@ public class SystemConfigurationService : ISystemConfigurationService
         {
             if (!File.Exists(_settingsPath))
             {
+                if (File.Exists(_legacySettingsPath))
+                {
+                    await using var legacyStream = File.Open(_legacySettingsPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    var migratedSettings = await JsonSerializer.DeserializeAsync<SystemConfigurationSettings>(legacyStream, JsonOptions, cancellationToken)
+                        ?? new SystemConfigurationSettings();
+                    await WriteUnsafeAsync(migratedSettings, cancellationToken);
+                    return migratedSettings;
+                }
+
                 var defaults = new SystemConfigurationSettings();
                 await WriteUnsafeAsync(defaults, cancellationToken);
                 return defaults;

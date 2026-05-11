@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MonetaCore.Data;
@@ -16,6 +17,7 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets<Program>(optional: true);
 }
 
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 builder.Configuration.AddEnvironmentVariables(prefix: "MONETACORE_");
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -148,6 +150,14 @@ builder.Services.AddAuthorization(options =>
             ApplicationRoles.Auditor));
 });
 
+// Trust the X-Forwarded-For / X-Forwarded-Proto headers sent by Render's proxy
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
 using (IServiceScope scope = app.Services.CreateScope())
@@ -183,6 +193,7 @@ if (enableApiDocumentation)
     });
 }
 
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 app.UseMiddleware<ApiExceptionHandlingMiddleware>();
 app.UseRouting();
