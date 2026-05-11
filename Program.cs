@@ -69,7 +69,24 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+
+    ServerVersion serverVersion;
+    string? configuredServerVersion = builder.Configuration["DatabaseServerVersion"];
+
+    if (builder.Environment.IsDevelopment())
+    {
+        serverVersion = ServerVersion.AutoDetect(connectionString);
+    }
+    else if (!string.IsNullOrWhiteSpace(configuredServerVersion))
+    {
+        serverVersion = ServerVersion.Parse(configuredServerVersion);
+    }
+    else
+    {
+        serverVersion = new MySqlServerVersion(new Version(8, 0, 36));
+    }
+
+    options.UseMySql(connectionString, serverVersion);
 });
 
 builder.Services.AddHttpContextAccessor();
@@ -203,6 +220,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+app.MapGet("/livez", () => Results.Ok(new
+{
+    status = "alive",
+    checkedAtUtc = DateTime.UtcNow
+}));
 
 app.MapGet("/healthz", async (AppDbContext dbContext, CancellationToken cancellationToken) =>
 {
