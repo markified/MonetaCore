@@ -839,25 +839,6 @@ html[data-theme="light"] .table-responsive {
   color: var(--smoke-300);
 }
 
-/* Role badges */
-.badge-status.superadmin {
-  color: #e07878;
-}
-.badge-status.mainadmin {
-  color: #e07878;
-}
-.badge-status.financemanager {
-  color: #d4af4f;
-}
-.badge-status.billingstaff,
-.badge-status.accountant,
-.badge-status.auditor {
-  color: #6dbf88;
-}
-.badge-status.client {
-  color: var(--smoke-300);
-}
-
 .review-count-badge {
   font-size: 0.74rem;
 }

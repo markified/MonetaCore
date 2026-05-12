@@ -7,6 +7,7 @@ namespace MonetaCore.Services;
 
 public class OutboxDispatcherOptions
 {
+    public bool Enabled { get; set; } = true;
     public int PollIntervalSeconds { get; set; } = 15;
     public int BatchSize { get; set; } = 20;
     public int MaxAttempts { get; set; } = 5;
@@ -33,6 +34,12 @@ public class OutboxDispatcherBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (!_options.CurrentValue.Enabled)
+        {
+            _logger.LogInformation("Outbox dispatcher is disabled by configuration.");
+            return;
+        }
+
         _logger.LogInformation("Outbox dispatcher started.");
 
         while (!stoppingToken.IsCancellationRequested)

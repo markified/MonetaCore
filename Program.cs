@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Reflection;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -17,7 +18,12 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets<Program>(optional: true);
 }
 
-builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+string localSettingsPath = Path.Combine(builder.Environment.ContentRootPath, "appsettings.Local.json");
+if (File.Exists(localSettingsPath) && !string.IsNullOrWhiteSpace(File.ReadAllText(localSettingsPath)))
+{
+    builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+}
+
 builder.Configuration.AddEnvironmentVariables(prefix: "MONETACORE_");
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -73,11 +79,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     ServerVersion serverVersion;
     string? configuredServerVersion = builder.Configuration["DatabaseServerVersion"];
 
-    if (builder.Environment.IsDevelopment())
-    {
-        serverVersion = ServerVersion.AutoDetect(connectionString);
-    }
-    else if (!string.IsNullOrWhiteSpace(configuredServerVersion))
+    if (!string.IsNullOrWhiteSpace(configuredServerVersion))
     {
         serverVersion = ServerVersion.Parse(configuredServerVersion);
     }
@@ -90,6 +92,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IInvoiceNumberService, InvoiceNumberService>();
@@ -167,22 +175,18 @@ builder.Services.AddAuthorization(options =>
             ApplicationRoles.Auditor));
 });
 
-// Trust the X-Forwarded-For / X-Forwarded-Proto headers sent by Render's proxy
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
-});
-
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+try
 {
     using IServiceScope scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
     await SeedData.InitializeAsync(dbContext, passwordService);
+}
+catch (Exception ex) when (app.Environment.IsDevelopment() && IsDatabaseUnavailable(ex))
+{
+    app.Logger.LogWarning(ex, "Startup seed skipped because the configured database is unavailable.");
 }
 
 // Configure the HTTP request pipeline.
@@ -258,6 +262,17 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+
+static bool IsDatabaseUnavailable(Exception exception)
+{
+    if (exception is DbException || exception is TimeoutException)
+    {
+        return true;
+    }
+
+    return exception.InnerException is not null && IsDatabaseUnavailable(exception.InnerException);
+}
 
 
 app.Run();

@@ -369,6 +369,192 @@ public class AccountController : Controller
         return RedirectToAction(nameof(PendingRegistrations));
     }
 
+    [Authorize(Policy = AuthorizationPolicies.SuperOrMainAdmin)]
+    [HttpGet]
+    public async Task<IActionResult> ManageUsers()
+    {
+        IQueryable<AppUser> query = _dbContext.Users.AsNoTracking();
+
+        if (!CanManagePrivilegedAccounts())
+        {
+            query = query.Where(u =>
+                u.Role != ApplicationRoles.SuperAdmin &&
+                u.Role != ApplicationRoles.MainAdmin);
+        }
+
+        var users = await query
+            .OrderBy(u => u.Role)
+            .ThenBy(u => u.FullName)
+            .Select(u => new ManageUserRowViewModel
+            {
+                Id = u.Id,
+                FullName = u.FullName,
+                Email = u.Email,
+                Role = u.Role,
+                IsActive = u.IsActive,
+                CreatedAtUtc = u.CreatedAtUtc
+            })
+            .ToListAsync();
+
+        return View(new ManageUsersViewModel
+        {
+            Users = users
+        });
+    }
+
+    [Authorize(Policy = AuthorizationPolicies.SuperOrMainAdmin)]
+    [HttpGet]
+    public async Task<IActionResult> EditUser(int id)
+    {
+        var user = await _dbContext.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == id);
+
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        if (!CanManageUser(user))
+        {
+            return Forbid();
+        }
+
+        return View(BuildEditUserViewModel(user));
+    }
+
+    [Authorize(Policy = AuthorizationPolicies.SuperOrMainAdmin)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditUser(EditUserViewModel model)
+    {
+        model.AvailableRoles = GetAssignableRoles();
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        if (!model.AvailableRoles.Contains(model.Role, StringComparer.Ordinal))
+        {
+            ModelState.AddModelError(nameof(model.Role), "You are not authorized to assign this role.");
+            return View(model);
+        }
+
+        var user = await _dbContext.Users.FindAsync(model.Id);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        if (!CanManageUser(user))
+        {
+            return Forbid();
+        }
+
+        int? currentUserId = GetCurrentUserId();
+        if (currentUserId == user.Id && !model.IsActive)
+        {
+            ModelState.AddModelError(nameof(model.IsActive), "You cannot deactivate your own account.");
+            return View(model);
+        }
+
+        string normalizedEmail = model.Email.Trim().ToLowerInvariant();
+        bool emailExists = await _dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.Id != model.Id && u.Email.ToLower() == normalizedEmail);
+
+        if (emailExists)
+        {
+            ModelState.AddModelError(nameof(model.Email), "An account with this email already exists.");
+            return View(model);
+        }
+
+        string updatedFullName = model.FullName.Trim();
+        var changes = new List<string>();
+
+        if (!string.Equals(user.FullName, updatedFullName, StringComparison.Ordinal))
+        {
+            changes.Add($"Full name: '{user.FullName}' -> '{updatedFullName}'");
+            user.FullName = updatedFullName;
+        }
+
+        if (!string.Equals(user.Email, normalizedEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            changes.Add($"Email: '{user.Email}' -> '{normalizedEmail}'");
+            user.Email = normalizedEmail;
+        }
+
+        if (!string.Equals(user.Role, model.Role, StringComparison.Ordinal))
+        {
+            changes.Add($"Role: '{user.Role}' -> '{model.Role}'");
+            user.Role = model.Role;
+        }
+
+        if (user.IsActive != model.IsActive)
+        {
+            changes.Add($"Active: {user.IsActive} -> {model.IsActive}");
+            user.IsActive = model.IsActive;
+        }
+
+        if (changes.Count == 0)
+        {
+            TempData["Success"] = $"No changes were needed for {user.FullName}.";
+            return RedirectToAction(nameof(ManageUsers));
+        }
+
+        await _dbContext.SaveChangesAsync();
+
+        await _auditService.LogAsync(
+            currentUserId,
+            User.Identity?.Name ?? "Admin",
+            "UPDATE_USER",
+            "User",
+            user.Id.ToString(),
+            $"Updated user {user.FullName} ({user.Email}). {string.Join("; ", changes)}");
+
+        TempData["Success"] = $"Updated {user.FullName}.";
+        return RedirectToAction(nameof(ManageUsers));
+    }
+
+    [Authorize(Policy = AuthorizationPolicies.SuperOrMainAdmin)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleUserStatus(int userId)
+    {
+        var user = await _dbContext.Users.FindAsync(userId);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        if (!CanManageUser(user))
+        {
+            return Forbid();
+        }
+
+        int? currentUserId = GetCurrentUserId();
+        if (currentUserId == user.Id && user.IsActive)
+        {
+            TempData["Error"] = "You cannot deactivate your own account.";
+            return RedirectToAction(nameof(ManageUsers));
+        }
+
+        user.IsActive = !user.IsActive;
+        await _dbContext.SaveChangesAsync();
+
+        await _auditService.LogAsync(
+            currentUserId,
+            User.Identity?.Name ?? "Admin",
+            user.IsActive ? "ACTIVATE_USER" : "DEACTIVATE_USER",
+            "User",
+            user.Id.ToString(),
+            $"Set user {user.FullName} ({user.Email}) active={user.IsActive}.");
+
+        TempData["Success"] = $"{user.FullName} is now {(user.IsActive ? "active" : "inactive")}.";
+        return RedirectToAction(nameof(ManageUsers));
+    }
+
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -421,254 +607,49 @@ public class AccountController : Controller
             .ToHashSet();
     }
 
+    private bool CanManagePrivilegedAccounts()
+    {
+        return User.IsInRole(ApplicationRoles.SuperAdmin);
+    }
+
+    private bool CanManageUser(AppUser user)
+    {
+        return CanManagePrivilegedAccounts() ||
+            (user.Role != ApplicationRoles.SuperAdmin && user.Role != ApplicationRoles.MainAdmin);
+    }
+
+    private IReadOnlyList<string> GetAssignableRoles()
+    {
+        return CanManagePrivilegedAccounts()
+            ? ApplicationRoles.AllRoles
+            : ApplicationRoles.AllRoles
+                .Where(role => role != ApplicationRoles.SuperAdmin && role != ApplicationRoles.MainAdmin)
+                .ToArray();
+    }
+
+    private int? GetCurrentUserId()
+    {
+        string? userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(userIdClaim, out int parsedId) ? parsedId : null;
+    }
+
+    private EditUserViewModel BuildEditUserViewModel(AppUser user)
+    {
+        return new EditUserViewModel
+        {
+            Id = user.Id,
+            FullName = user.FullName,
+            Email = user.Email,
+            Role = user.Role,
+            IsActive = user.IsActive,
+            AvailableRoles = GetAssignableRoles()
+        };
+    }
+
     [AllowAnonymous]
     [HttpGet]
     public IActionResult AccessDenied()
     {
         return View();
     }
-
-    // ──────────────────────────────────────────────
-    // MANAGE USERS
-    // ──────────────────────────────────────────────
-
-    [Authorize(Policy = AuthorizationPolicies.SuperOrMainAdmin)]
-    [HttpGet]
-    public async Task<IActionResult> ManageUsers(string? role = null, string? search = null)
-    {
-        bool isSuperAdmin = User.IsInRole(ApplicationRoles.SuperAdmin);
-
-        IQueryable<AppUser> query = _dbContext.Users.AsNoTracking();
-
-        // MainAdmin cannot see SuperAdmin or MainAdmin accounts
-        if (!isSuperAdmin)
-        {
-            query = query.Where(u =>
-                u.Role != ApplicationRoles.SuperAdmin &&
-                u.Role != ApplicationRoles.MainAdmin);
-        }
-
-        if (!string.IsNullOrWhiteSpace(role))
-        {
-            query = query.Where(u => u.Role == role);
-        }
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            string term = search.Trim().ToLower();
-            query = query.Where(u =>
-                u.FullName.ToLower().Contains(term) ||
-                u.Email.ToLower().Contains(term));
-        }
-
-        var users = await query.OrderBy(u => u.Role).ThenBy(u => u.FullName).ToListAsync();
-
-        var vm = new ManageUsersViewModel
-        {
-            Users = users,
-            RoleFilter = role,
-            Search = search,
-            IsSuperAdmin = isSuperAdmin
-        };
-
-        return View(vm);
-    }
-
-    [Authorize(Policy = AuthorizationPolicies.SuperOrMainAdmin)]
-    [HttpGet]
-    public async Task<IActionResult> EditUser(int id)
-    {
-        var user = await _dbContext.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Id == id);
-        if (user is null) return NotFound();
-
-        // MainAdmin cannot edit SuperAdmin or MainAdmin
-        if (!User.IsInRole(ApplicationRoles.SuperAdmin) &&
-            (user.Role == ApplicationRoles.SuperAdmin || user.Role == ApplicationRoles.MainAdmin))
-        {
-            return Forbid();
-        }
-
-        var vm = new EditUserViewModel
-        {
-            Id = user.Id,
-            FullName = user.FullName,
-            Email = user.Email,
-            Role = user.Role,
-            IsActive = user.IsActive
-        };
-
-        return View(vm);
-    }
-
-    [Authorize(Policy = AuthorizationPolicies.SuperOrMainAdmin)]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditUser(EditUserViewModel model)
-    {
-        // Validate optional password fields
-        if (!string.IsNullOrWhiteSpace(model.NewPassword))
-        {
-            if (model.NewPassword.Length < 8)
-                ModelState.AddModelError(nameof(model.NewPassword), "Password must be at least 8 characters.");
-
-            if (model.NewPassword != model.ConfirmNewPassword)
-                ModelState.AddModelError(nameof(model.ConfirmNewPassword), "Passwords do not match.");
-        }
-
-        if (!ModelState.IsValid) return View(model);
-
-        var user = await _dbContext.Users.FindAsync(model.Id);
-        if (user is null) return NotFound();
-
-        bool isSuperAdmin = User.IsInRole(ApplicationRoles.SuperAdmin);
-
-        // MainAdmin cannot edit SuperAdmin or MainAdmin
-        if (!isSuperAdmin &&
-            (user.Role == ApplicationRoles.SuperAdmin || user.Role == ApplicationRoles.MainAdmin))
-        {
-            return Forbid();
-        }
-
-        // MainAdmin cannot assign SuperAdmin or MainAdmin roles
-        if (!isSuperAdmin &&
-            (model.Role == ApplicationRoles.SuperAdmin || model.Role == ApplicationRoles.MainAdmin))
-        {
-            ModelState.AddModelError(nameof(model.Role), "You are not authorized to assign this role.");
-            return View(model);
-        }
-
-        string adminName = User.Identity?.Name ?? "Admin";
-        int? adminId = null;
-        if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedAdminId))
-            adminId = parsedAdminId;
-
-        var changes = new System.Text.StringBuilder();
-
-        if (user.FullName != model.FullName.Trim())
-        {
-            changes.Append($"Name: '{user.FullName}' → '{model.FullName.Trim()}'. ");
-            user.FullName = model.FullName.Trim();
-        }
-
-        string normalizedEmail = model.Email.Trim().ToLowerInvariant();
-        if (user.Email != normalizedEmail)
-        {
-            bool emailTaken = await _dbContext.Users.AnyAsync(u => u.Email == normalizedEmail && u.Id != user.Id);
-            if (emailTaken)
-            {
-                ModelState.AddModelError(nameof(model.Email), "That email is already in use.");
-                return View(model);
-            }
-            changes.Append($"Email: '{user.Email}' → '{normalizedEmail}'. ");
-            user.Email = normalizedEmail;
-        }
-
-        if (user.Role != model.Role)
-        {
-            changes.Append($"Role: '{user.Role}' → '{model.Role}'. ");
-            user.Role = model.Role;
-        }
-
-        if (user.IsActive != model.IsActive)
-        {
-            changes.Append($"Active: {user.IsActive} → {model.IsActive}. ");
-            user.IsActive = model.IsActive;
-        }
-
-        if (!string.IsNullOrWhiteSpace(model.NewPassword))
-        {
-            user.PasswordHash = _passwordService.HashPassword(model.NewPassword);
-            changes.Append("Password reset. ");
-        }
-
-        _dbContext.Users.Update(user);
-        await _dbContext.SaveChangesAsync();
-
-        await _auditService.LogAsync(
-            adminId,
-            adminName,
-            "EDIT_USER",
-            "User",
-            user.Id.ToString(),
-            $"Updated user {user.FullName} ({user.Email}). Changes: {changes}");
-
-        TempData["Success"] = $"User \"{user.FullName}\" updated successfully.";
-        return RedirectToAction(nameof(ManageUsers));
-    }
-
-    [Authorize(Policy = AuthorizationPolicies.SuperOrMainAdmin)]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleUserActive(int userId)
-    {
-        var user = await _dbContext.Users.FindAsync(userId);
-        if (user is null) return NotFound();
-
-        bool isSuperAdmin = User.IsInRole(ApplicationRoles.SuperAdmin);
-
-        if (!isSuperAdmin &&
-            (user.Role == ApplicationRoles.SuperAdmin || user.Role == ApplicationRoles.MainAdmin))
-        {
-            return Forbid();
-        }
-
-        // Prevent deactivating own account
-        if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int selfId) && selfId == user.Id)
-        {
-            TempData["Error"] = "You cannot deactivate your own account.";
-            return RedirectToAction(nameof(ManageUsers));
-        }
-
-        string adminName = User.Identity?.Name ?? "Admin";
-        int? adminId = selfId > 0 ? selfId : null;
-
-        user.IsActive = !user.IsActive;
-        _dbContext.Users.Update(user);
-        await _dbContext.SaveChangesAsync();
-
-        string action = user.IsActive ? "ACTIVATE_USER" : "DEACTIVATE_USER";
-        await _auditService.LogAsync(
-            adminId,
-            adminName,
-            action,
-            "User",
-            user.Id.ToString(),
-            $"{(user.IsActive ? "Activated" : "Deactivated")} user {user.FullName} ({user.Email}).");
-
-        TempData["Success"] = $"User \"{user.FullName}\" {(user.IsActive ? "activated" : "deactivated")}.";
-        return RedirectToAction(nameof(ManageUsers));
-    }
-
-    [Authorize(Policy = AuthorizationPolicies.SuperAdminOnly)]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteUser(int userId)
-    {
-        var user = await _dbContext.Users.FindAsync(userId);
-        if (user is null) return NotFound();
-
-        // Prevent deleting own account
-        if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int selfId) && selfId == user.Id)
-        {
-            TempData["Error"] = "You cannot delete your own account.";
-            return RedirectToAction(nameof(ManageUsers));
-        }
-
-        string adminName = User.Identity?.Name ?? "Admin";
-
-        _dbContext.Users.Remove(user);
-        await _dbContext.SaveChangesAsync();
-
-        await _auditService.LogAsync(
-            selfId > 0 ? selfId : null,
-            adminName,
-            "DELETE_USER",
-            "User",
-            userId.ToString(),
-            $"Permanently deleted user {user.FullName} ({user.Email}) with role {user.Role}.");
-
-        TempData["Success"] = $"User \"{user.FullName}\" deleted permanently.";
-        return RedirectToAction(nameof(ManageUsers));
-    }
 }
-

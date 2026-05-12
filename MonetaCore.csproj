@@ -23,4 +23,8 @@
     <None Remove="MonetaCore.Tests\**\*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appsettings.Local.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
 </Project>

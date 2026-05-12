@@ -12,7 +12,7 @@ public static class SeedData
 
         if (await dbContext.Users.AnyAsync())
         {
-            await EnsureSuperAdminAsync(dbContext, passwordService);
+            await EnsureAdministrativeUsersAsync(dbContext, passwordService);
             return;
         }
 
@@ -166,22 +166,46 @@ public static class SeedData
         await dbContext.SaveChangesAsync();
     }
 
-    private static async Task EnsureSuperAdminAsync(AppDbContext dbContext, IPasswordService passwordService)
+    private static async Task EnsureAdministrativeUsersAsync(AppDbContext dbContext, IPasswordService passwordService)
     {
-        const string superAdminEmail = "superadmin@monetacore.local";
-        string normalizedEmail = superAdminEmail.ToLowerInvariant();
+        await EnsureAdministrativeUserAsync(
+            dbContext,
+            passwordService,
+            email: "superadmin@monetacore.local",
+            fullName: "Super Administrator",
+            password: "SuperAdmin@123",
+            role: ApplicationRoles.SuperAdmin);
 
-        var superAdmin = await dbContext.Users
+        await EnsureAdministrativeUserAsync(
+            dbContext,
+            passwordService,
+            email: "admin@monetacore.local",
+            fullName: "Main Administrator",
+            password: "Admin@123",
+            role: ApplicationRoles.MainAdmin);
+    }
+
+    private static async Task EnsureAdministrativeUserAsync(
+        AppDbContext dbContext,
+        IPasswordService passwordService,
+        string email,
+        string fullName,
+        string password,
+        string role)
+    {
+        string normalizedEmail = email.ToLowerInvariant();
+
+        var user = await dbContext.Users
             .SingleOrDefaultAsync(x => x.Email.ToLower() == normalizedEmail);
 
-        if (superAdmin is null)
+        if (user is null)
         {
             dbContext.Users.Add(new AppUser
             {
-                FullName = "Super Administrator",
-                Email = superAdminEmail,
-                PasswordHash = passwordService.HashPassword("SuperAdmin@123"),
-                Role = ApplicationRoles.SuperAdmin,
+                FullName = fullName,
+                Email = email,
+                PasswordHash = passwordService.HashPassword(password),
+                Role = role,
                 IsActive = true
             });
 
@@ -191,21 +215,21 @@ public static class SeedData
 
         bool hasChanges = false;
 
-        if (!superAdmin.IsActive)
+        if (!user.IsActive)
         {
-            superAdmin.IsActive = true;
+            user.IsActive = true;
             hasChanges = true;
         }
 
-        if (!string.Equals(superAdmin.Role, ApplicationRoles.SuperAdmin, StringComparison.Ordinal))
+        if (!string.Equals(user.Role, role, StringComparison.Ordinal))
         {
-            superAdmin.Role = ApplicationRoles.SuperAdmin;
+            user.Role = role;
             hasChanges = true;
         }
 
-        if (string.IsNullOrWhiteSpace(superAdmin.FullName))
+        if (string.IsNullOrWhiteSpace(user.FullName))
         {
-            superAdmin.FullName = "Super Administrator";
+            user.FullName = fullName;
             hasChanges = true;
         }
 
